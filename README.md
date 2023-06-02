@@ -1,7 +1,7 @@
 # ETD Alma Monitor Service
 A service that notifies the DAIS system when an ETD is ready to be ingested into the DRS
 
-<img src="https://github.com/harvard-lts/etd-base-template/actions/workflows/pytest.yml/badge.svg">
+<img src="https://github.com/harvard-lts/etd_alma_monitor_service/actions/workflows/pytest.yml/badge.svg">
 
 <img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/ives1227/4c52af43b2bf4d034ff3b4f8938a8f93/raw/covbadge.json">
 
