@@ -163,4 +163,5 @@ cython_debug/
 *~
 *.swp
 /.project
-.project
+/.bash_history
+/.pydevproject
