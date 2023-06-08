@@ -20,5 +20,5 @@ class Worker():
     # this is call to the DIMS healthcheck for integration testing
     def call_api(self):
         dims_healthcheck_url = os.getenv("DIMS_HEALTHCHECK_URL")
-        r = requests.get(dims_healthcheck_url)
+        r = requests.get(dims_healthcheck_url, verify=False)
         return r.text
