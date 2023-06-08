@@ -2,10 +2,9 @@ import os
 import requests
 
 """
-This is a template of a basic worker class for etds.
 
-Since: 2023-05-23
-Author: cgoines
+Since: 2023-06-07
+Author: vcrema
 """
 
 
@@ -18,7 +17,7 @@ class Worker():
     def get_version(self):
         return self.version
 
-    # this is call to the DASH healthcheck for integration testing
+    # this is call to the DIMS healthcheck for integration testing
     def call_api(self):
         url = "https://dash.harvard.edu/rest/test"
         r = requests.get(url)
