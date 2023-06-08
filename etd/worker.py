@@ -19,6 +19,6 @@ class Worker():
 
     # this is call to the DIMS healthcheck for integration testing
     def call_api(self):
-        url = "https://dash.harvard.edu/rest/test"
-        r = requests.get(url)
+        dims_healtheck_url = "https://dims-dev.lib.harvard.edu:10580/health"
+        r = requests.get(dims_healtheck_url)
         return r.text
