@@ -20,6 +20,6 @@ class Worker():
     # this is call to the DIMS healthcheck for integration testing
     def call_api(self):
         # dims_healthcheck_url = os.getenv("DIMS_HEALTHCHECK_URL")
-        dims_healthcheck_url = "https://ltsds-cloud-qa-1.lib.harvard.edu:10580/health"
+        dims_healthcheck_url = "https://dims-dev.lib.harvard.edu:10580/health"
         r = requests.get(dims_healthcheck_url, verify=False)
         return r.text
