@@ -5,6 +5,7 @@ import requests
 app = Celery()
 app.config_from_object('celeryconfig')
 
+
 @app.task(serializer='json', name='etd-alma-monitor-service.tasks.send_to_drs')
 def invoke_dims(message):
     print("message")
