@@ -6,7 +6,7 @@ app = Celery()
 app.config_from_object('celeryconfig')
 
 
-@app.task(serializer='json', name='etd-alma-monitor-service.tasks.invoke_dims')
+@app.task(serializer='json', name='etd-alma-monitor-service.tasks.send_to_drs')
 def invoke_dims(message):
     print("message")
     print(message)
@@ -25,5 +25,6 @@ def invoke_hello_world():
     # message onto the etd_ingested_into_drs queue
     # to allow the pipeline to continue
     new_message = {"hello": "from etd-alma-monitor-service"}
-    app.send_task("tasks.tasks.do_task", args=[new_message], kwargs={},
+    app.send_task("etd-alma-drs-holding-service.tasks.add_holdings",
+                  args=[new_message], kwargs={},
                   queue="etd_ingested_into_drs")

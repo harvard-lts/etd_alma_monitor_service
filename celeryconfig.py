@@ -8,6 +8,6 @@ timezone = 'US/Eastern'
 enable_utc = True
 worker_enable_remote_control = False
 task_routes = {
-    'etd-alma-monitor-service.tasks.invoke_dims':
+    'etd-alma-monitor-service.tasks.send_to_drs':
         {'queue': os.getenv("CONSUME_QUEUE_NAME")}
 }
