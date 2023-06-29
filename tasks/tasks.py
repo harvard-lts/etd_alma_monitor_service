@@ -1,11 +1,13 @@
 from celery import Celery
 import os
 import requests
-etd.configure_logger()
-logger = logging.getLogger('etd_alma_monitor')
+import logging
+import etd
 
 app = Celery()
 app.config_from_object('celeryconfig')
+etd.configure_logger()
+logger = logging.getLogger('etd_alma_monitor')
 
 
 @app.task(serializer='json', name='etd-alma-monitor-service.tasks.send_to_drs')
