@@ -1,15 +1,19 @@
 from celery import Celery
 import os
 import requests
+import logging
+import etd
 
 app = Celery()
 app.config_from_object('celeryconfig')
+etd.configure_logger()
+logger = logging.getLogger('etd_alma_monitor')
 
 
 @app.task(serializer='json', name='etd-alma-monitor-service.tasks.send_to_drs')
 def invoke_dims(message):
-    print("message")
-    print(message)
+    logger.info("message")
+    logger.info(message)
     dims_ingest_url = os.getenv("DIMS_INGEST_URL")
     # Temporarily using a get call since we are testing
     # with a healtcheck endpoint for 'hello world'
