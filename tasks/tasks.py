@@ -19,10 +19,11 @@ def invoke_dims(message):
     logger.debug("message")
     logger.debug(message)
     dims_ingest_url = os.getenv("DIMS_INGEST_URL")
-    # Temporarily using a get call since we are testing
-    # with a healtcheck endpoint for 'hello world'
-    r = requests.get(dims_ingest_url, verify=False)
-    logger.debug(r.text)
+    if dims_ingest_url is not None:
+        # Temporarily using a get call since we are testing
+        # with a healtcheck endpoint for 'hello world'
+        r = requests.get(dims_ingest_url, verify=False)
+        logger.debug(r.text)
     json_message = json.loads(message)
     if FEATURE_FLAGS in json_message:
         feature_flags = json_message[FEATURE_FLAGS]
