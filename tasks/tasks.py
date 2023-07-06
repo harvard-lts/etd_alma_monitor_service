@@ -56,5 +56,5 @@ def invoke_hello_world(json_message):
 
     app.send_task("etd-alma-drs-holding-service.tasks.add_holdings",
                   args=[new_message], kwargs={},
-                  queue="etd_ingested_into_drs_dd")
+                  queue="etd_ingested_into_drs")
     return {}
