@@ -3,7 +3,6 @@ import os
 import requests
 import logging
 import etd
-import json
 
 app = Celery()
 app.config_from_object('celeryconfig')
@@ -15,16 +14,15 @@ SEND_TO_DRS_FEATURE_FLAG = "send_to_drs_feature_flag"
 
 
 @app.task(serializer='json', name='etd-alma-monitor-service.tasks.send_to_drs')
-def invoke_dims(message):
+def invoke_dims(json_message):
     logger.debug("message")
-    logger.debug(message)
+    logger.debug(json_message)
     dims_ingest_url = os.getenv("DIMS_INGEST_URL")
     if dims_ingest_url is not None:
         # Temporarily using a get call since we are testing
         # with a healtcheck endpoint for 'hello world'
         r = requests.get(dims_ingest_url, verify=False)
         logger.debug(r.text)
-    json_message = json.loads(message)
     if FEATURE_FLAGS in json_message:
         feature_flags = json_message[FEATURE_FLAGS]
         if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
