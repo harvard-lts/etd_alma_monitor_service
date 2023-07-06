@@ -17,6 +17,7 @@ services:
       - '.env'
     environment:
       - CELERY_LOG_LEVEL=DEBUG
+      - CONSUME_QUEUE_NAME=etd_ingested_into_alma_dd
     ports:
       # Worker API
       - '10602:8081'
