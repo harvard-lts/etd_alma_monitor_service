@@ -10,6 +10,8 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.resources import SERVICE_NAME
+from opentelemetry.trace.propagation.tracecontext \
+    import TraceContextTextMapPropagator
 import json
 
 app = Celery()
@@ -36,7 +38,12 @@ trace.get_tracer_provider().add_span_processor(span_processor)
 
 @app.task(serializer='json', name='etd-alma-monitor-service.tasks.send_to_drs')
 def invoke_dims(json_message):
-    with tracer.start_as_current_span("send_to_drs") as current_span:
+    ctx = None
+    if "traceparent" in json_message:
+        carrier = {"traceparent": json_message["traceparent"]}
+        ctx = TraceContextTextMapPropagator().extract(carrier)
+    with tracer.start_as_current_span("send_to_drs", context=ctx) \
+            as current_span:
         logger.debug("message")
         logger.debug(json_message)
         dims_ingest_url = os.getenv("DIMS_INGEST_URL")
@@ -82,7 +89,10 @@ def invoke_hello_world(json_message):
     # do not trigger the next task.
     if "unit_test" in json_message:
         return new_message
-
+    carrier = {}
+    TraceContextTextMapPropagator().inject(carrier)
+    traceparent = carrier["traceparent"]
+    new_message["traceparent"] = traceparent
     current_span.add_event("to next queue")
     app.send_task("etd-alma-drs-holding-service.tasks.add_holdings",
                   args=[new_message], kwargs={},
