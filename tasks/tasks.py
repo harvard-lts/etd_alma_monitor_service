@@ -10,6 +10,8 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.resources import SERVICE_NAME
+from opentelemetry.trace.propagation.tracecontext \
+    import TraceContextTextMapPropagator
 import json
 
 app = Celery()
@@ -34,33 +36,37 @@ span_processor = BatchSpanProcessor(otlp_exporter)
 trace.get_tracer_provider().add_span_processor(span_processor)
 
 
-@tracer.start_as_current_span("invoke_dims")
 @app.task(serializer='json', name='etd-alma-monitor-service.tasks.send_to_drs')
 def invoke_dims(json_message):
-    logger.debug("message")
-    logger.debug(json_message)
-    current_span = trace.get_current_span()
-    dims_ingest_url = os.getenv("DIMS_INGEST_URL")
-    if dims_ingest_url is not None:
-        # Temporarily using a get call since we are testing
-        # with a healtcheck endpoint for 'hello world'
-        r = requests.get(dims_ingest_url, verify=False)
-        logger.debug(r.text)
-        current_span.add_event(r.text)
+    ctx = None
+    if "traceparent" in json_message:
+        carrier = {"traceparent": json_message["traceparent"]}
+        ctx = TraceContextTextMapPropagator().extract(carrier)
+    with tracer.start_as_current_span("send_to_drs", context=ctx) \
+            as current_span:
+        logger.debug("message")
+        logger.debug(json_message)
+        dims_ingest_url = os.getenv("DIMS_INGEST_URL")
+        if dims_ingest_url is not None:
+            # Temporarily using a get call since we are testing
+            # with a healtcheck endpoint for 'hello world'
+            r = requests.get(dims_ingest_url, verify=False)
+            logger.debug(r.text)
+            current_span.add_event(r.text)
 
-    if FEATURE_FLAGS in json_message:
-        feature_flags = json_message[FEATURE_FLAGS]
-        if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
-                feature_flags[SEND_TO_DRS_FEATURE_FLAG] == "on":
-            # Send to DRS
-            logger.debug("FEATURE IS ON>>>>>SEND TO DRS")
-            current_span.add_event("FEATURE IS ON>>>>>SEND TO DRS")
+        if FEATURE_FLAGS in json_message:
+            feature_flags = json_message[FEATURE_FLAGS]
+            if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
+                    feature_flags[SEND_TO_DRS_FEATURE_FLAG] == "on":
+                # Send to DRS
+                logger.debug("FEATURE IS ON>>>>>SEND TO DRS")
+                current_span.add_event("FEATURE IS ON>>>>>SEND TO DRS")
+            else:
+                # Feature is off so do hello world
+                return invoke_hello_world(json_message)
         else:
-            # Feature is off so do hello world
+            # No feature flags so do hello world for now
             return invoke_hello_world(json_message)
-    else:
-        # No feature flags so do hello world for now
-        return invoke_hello_world(json_message)
 
 
 # To be removed when real logic takes its place
@@ -83,9 +89,12 @@ def invoke_hello_world(json_message):
     # do not trigger the next task.
     if "unit_test" in json_message:
         return new_message
-
+    carrier = {}
+    TraceContextTextMapPropagator().inject(carrier)
+    traceparent = carrier["traceparent"]
+    new_message["traceparent"] = traceparent
     current_span.add_event("to next queue")
     app.send_task("etd-alma-drs-holding-service.tasks.add_holdings",
                   args=[new_message], kwargs={},
-                  queue="etd_ingested_into_drs")
+                  queue=os.getenv('PUBLISH_QUEUE_NAME'))
     return {}
