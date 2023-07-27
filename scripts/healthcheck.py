@@ -2,6 +2,7 @@ import os
 import sys
 import time
 from pathlib import Path
+import requests
 # heartbeat script for docker/k8s
 
 hbeat_path = os.getenv("HEARTBEAT_FILE", "/tmp/worker_heartbeat")
