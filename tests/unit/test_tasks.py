@@ -14,3 +14,8 @@ class TestTasksClass():
         retval = tasks.invoke_dims(message)
         assert "hello" in retval
         assert "feature_flags" in retval
+
+    def test_invoke_dims_no_feature_flag(self):
+        message = {"unit_test": "true"}
+        retval = tasks.invoke_dims(message)
+        assert "hello" in retval

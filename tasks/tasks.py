@@ -86,7 +86,7 @@ app.steps["worker"].add(LivenessProbe)
 @app.task(serializer='json', name='etd-alma-monitor-service.tasks.send_to_drs')
 def invoke_dims(json_message):
     ctx = None
-    if "traceparent" in json_message:
+    if "traceparent" in json_message:  # pragma: no cover, tracing is not being tested # noqa: E501
         carrier = {"traceparent": json_message["traceparent"]}
         ctx = TraceContextTextMapPropagator().extract(carrier)
     with tracer.start_as_current_span("send_to_drs", context=ctx) \
@@ -104,7 +104,7 @@ def invoke_dims(json_message):
         if FEATURE_FLAGS in json_message:
             feature_flags = json_message[FEATURE_FLAGS]
             if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
-                    feature_flags[SEND_TO_DRS_FEATURE_FLAG] == "on":
+                    feature_flags[SEND_TO_DRS_FEATURE_FLAG] == "on":  # pragma: no cover, unit test should not create a DRS record # noqa: E501
                 # Send to DRS
                 logger.debug("FEATURE IS ON>>>>>SEND TO DRS")
                 current_span.add_event("FEATURE IS ON>>>>>SEND TO DRS")
@@ -136,12 +136,12 @@ def invoke_hello_world(json_message):
     # do not trigger the next task.
     if "unit_test" in json_message:
         return new_message
-    carrier = {}
-    TraceContextTextMapPropagator().inject(carrier)
-    traceparent = carrier["traceparent"]
-    new_message["traceparent"] = traceparent
-    current_span.add_event("to next queue")
+    carrier = {}  # pragma: no cover, tracing is not being tested # noqa: E501
+    TraceContextTextMapPropagator().inject(carrier)  # pragma: no cover, tracing is not being tested # noqa: E501
+    traceparent = carrier["traceparent"]  # pragma: no cover, tracing is not being tested # noqa: E501
+    new_message["traceparent"] = traceparent  # pragma: no cover, tracing is not being tested # noqa: E501
+    current_span.add_event("to next queue")  # pragma: no cover, tracing is not being tested # noqa: E501
     app.send_task("etd-alma-drs-holding-service.tasks.add_holdings",
                   args=[new_message], kwargs={},
-                  queue=os.getenv('PUBLISH_QUEUE_NAME'))
-    return {}
+                  queue=os.getenv('PUBLISH_QUEUE_NAME'))  # pragma: no cover, does not reach this for unit testing # noqa: E501
+    return {}  # pragma: no cover, does not reach this for unit testing # noqa: E501
