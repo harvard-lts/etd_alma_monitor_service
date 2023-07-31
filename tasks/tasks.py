@@ -94,7 +94,7 @@ def invoke_dims(json_message):
         logger.debug("message")
         logger.debug(json_message)
         dims_ingest_url = os.getenv("DIMS_INGEST_URL")
-        if dims_ingest_url is not None:
+        if dims_ingest_url is not None:  # pragma: no cover, this should be checked in the healthcheck # noqa: E501
             # Temporarily using a get call since we are testing
             # with a healtcheck endpoint for 'hello world'
             r = requests.get(dims_ingest_url, verify=False)
