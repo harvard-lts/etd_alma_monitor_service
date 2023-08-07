@@ -93,6 +93,10 @@ def invoke_dims(json_message):
             as current_span:
         logger.debug("message")
         logger.debug(json_message)
+        if 'identifier' in json_message:
+            proquest_identifier = json_message['identifier']
+            current_span.set_attribute("identifier", proquest_identifier)
+            logger.debug("processing id: " + str(proquest_identifier))
         dims_ingest_url = os.getenv("DIMS_INGEST_URL")
         if dims_ingest_url is not None:  # pragma: no cover, this should be checked in the healthcheck # noqa: E501
             # Temporarily using a get call since we are testing
@@ -125,6 +129,11 @@ def invoke_hello_world(json_message):
     # to allow the pipeline to continue
     current_span = trace.get_current_span()
     new_message = {"hello": "from etd-alma-monitor-service"}
+    if 'identifier' in json_message:
+        proquest_identifier = json_message['identifier']
+        new_message["identifier"] = proquest_identifier
+        current_span.set_attribute("identifier", proquest_identifier)
+        logger.debug("processing id: " + str(proquest_identifier))
     if FEATURE_FLAGS in json_message:
         logger.debug("FEATURE FLAGS FOUND")
         logger.debug(json_message[FEATURE_FLAGS])
