@@ -21,19 +21,21 @@ class TestWorkerIntegrationClass():
     def test_get_pending_pqids(self):
         # Create a MongoDB client and connect to your MongoDB server
         client = pymongo.MongoClient(os.getenv("MONGO_URL"))
-        
+
         # Select a database (you can create it if it doesn't exist)
         db = client[os.getenv("MONGO_DB")]
-        collection = db["test_etd"]
+        collection = db[os.getenv("MONGO_TEST_COLLECTION")]
         document = {
-            "another_id": 12345,
-            "college": "State",
-            "status": "active",
+            "proquest_id": 12345678,
+            "school_alma_dropbox": "gsd",
+            "alma_submission_status": "ALMA_DROPBOX",
             "insertion_date": datetime.datetime.now().isoformat(),
-            "last_modified_date": datetime.datetime.now().isoformat()
+            "last_modified_date": datetime.datetime.now().isoformat(),
+            "alma_dropbox_submission_date":
+            datetime.datetime.now().isoformat()
         }
         collection.insert_one(document)
-        query = {"status": "active"}
+        query = {"alma_submission_status": "ALMA_DROPBOX"}
         matching_documents = collection.find(query)
         # for doc in matching_documents:
         #    print(doc)
