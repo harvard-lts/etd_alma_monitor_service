@@ -2,6 +2,8 @@ import pymongo
 import datetime
 import os
 from etd.worker import Worker
+from etd.alma_monitor import AlmaMonitor
+from etd.mongo_util import MongoUtil
 
 
 class TestWorkerIntegrationClass():
@@ -18,30 +20,60 @@ class TestWorkerIntegrationClass():
         msg = worker.call_api()
         assert msg != expected_msg
 
-    def test_get_pending_pqids(self):
-        # Create a MongoDB client and connect to your MongoDB server
-        client = pymongo.MongoClient(os.getenv("MONGO_URL"))
+class TestMongoIntegrationClass():
 
-        # Select a database (you can create it if it doesn't exist)
-        db = client[os.getenv("MONGO_DB")]
-        collection = db[os.getenv("MONGO_TEST_COLLECTION")]
-        document = {
-            "proquest_id": 12345678,
+    records = [
+        {
+            "proquest_id": 1234567,
             "school_alma_dropbox": "gsd",
             "alma_submission_status": "ALMA_DROPBOX",
             "insertion_date": datetime.datetime.now().isoformat(),
             "last_modified_date": datetime.datetime.now().isoformat(),
             "alma_dropbox_submission_date":
             datetime.datetime.now().isoformat()
-        }
-        collection.insert_one(document)
-        query = {"alma_submission_status": "ALMA_DROPBOX"}
-        matching_documents = collection.find(query)
-        # for doc in matching_documents:
-        #    print(doc)
-        document_list = list(matching_documents)
-        # print(document_list)
-        # print(len(document_list))
-        assert len(document_list) == 1
-        collection.delete_many({})
-        client.close()
+        },
+        {
+            "proquest_id": 2345678,
+            "school_alma_dropbox": "dce",
+            "alma_submission_status": "ALMA_DROPBOX",
+            "insertion_date": datetime.datetime.now().isoformat(),
+            "last_modified_date": datetime.datetime.now().isoformat(),
+            "alma_dropbox_submission_date":
+            datetime.datetime.now().isoformat()
+        },
+        {
+            "proquest_id": 3456789,
+            "school_alma_dropbox": "college",
+            "alma_submission_status": "ALMA",
+            "insertion_date": datetime.datetime.now().isoformat(),
+            "last_modified_date": datetime.datetime.now().isoformat(),
+            "alma_dropbox_submission_date":
+            datetime.datetime.now().isoformat()
+        }             
+    ]
+
+    def test_poll_for_alma_submissions(self):
+        # setup the test collection with 3 records
+        self.__setup_test_collection()
+        # call the poller
+        alma_monitor = AlmaMonitor()
+        records = alma_monitor.poll_for_alma_submissions()
+
+        assert len(records) == 2
+
+        # teardown the test collection
+        self.__teardown_test_collection()
+
+    def __setup_test_collection(self):
+        mongo_util = MongoUtil()
+        mongo_util.set_collection(mongo_util.db[os.getenv("MONGO_TEST_COLLECTION")])
+        mongo_util.insert_records(TestMongoIntegrationClass.records)
+        mongo_util.close_connection()
+
+    def __teardown_test_collection(self):
+        mongo_util = MongoUtil()
+        mongo_util.set_collection(mongo_util.db[os.getenv("MONGO_TEST_COLLECTION")])
+        mongo_util.delete_records()
+        mongo_util.close_connection()
+        
+
