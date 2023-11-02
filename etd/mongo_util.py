@@ -19,8 +19,11 @@ class MongoUtil():
     def insert_records(self, records):
         self.collection.insert_many(records)
 
-    def query_records(self, query={}):
-        return list(self.collection.find(query))
+    def query_records(self, query={}, fields=None):
+        if fields is not None:
+            return list(self.collection.find(query, fields))
+        else:
+            return list(self.collection.find(query))
 
     def delete_records(self):
         result = self.collection.delete_many({})

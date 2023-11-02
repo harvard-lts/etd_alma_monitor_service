@@ -44,7 +44,8 @@ def add_records(collection):
 
 def query_by_alma_status(collection):
         query = {"alma_submission_status": "ALMA_DROPBOX"}
-        matching_records = collection.find(query)
+        fields = {"proquest_id": 1, "school_alma_dropbox": 1, "alma_submission_status": 1}
+        matching_records = collection.find(query, fields)
         for rec in matching_records:
            print(rec)
 
