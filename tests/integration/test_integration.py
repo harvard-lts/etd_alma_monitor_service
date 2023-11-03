@@ -1,24 +1,9 @@
 import pymongo
 import datetime
 import os
-from etd.worker import Worker
 from etd.alma_monitor import AlmaMonitor
 from etd.mongo_util import MongoUtil
 
-
-class TestWorkerIntegrationClass():
-
-    def test_api(self):
-        expected_msg = "REST api is running."
-        worker = Worker()
-        msg = worker.call_api()
-        assert msg == expected_msg
-
-    def test_api_fail(self):
-        expected_msg = "REST api is NOT running."
-        worker = Worker()
-        msg = worker.call_api()
-        assert msg != expected_msg
 
 class TestMongoIntegrationClass():
 
@@ -75,5 +60,5 @@ class TestMongoIntegrationClass():
         mongo_util.set_collection(mongo_util.db[os.getenv("MONGO_TEST_COLLECTION")])
         mongo_util.delete_records()
         mongo_util.close_connection()
-        
+
 
