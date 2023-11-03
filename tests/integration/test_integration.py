@@ -1,4 +1,3 @@
-import pymongo
 import datetime
 import os
 from etd.alma_monitor import AlmaMonitor

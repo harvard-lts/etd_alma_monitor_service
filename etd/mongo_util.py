@@ -31,24 +31,16 @@ class MongoUtil():
     def close_connection(self):
         self.client.close()
 
+    def __del__(self):
+        self.close_connection()
+
     # we use this if we want to set to the test collection for testing
     def set_collection(self, collection):
         self.collection = collection
 
-    def __del__(self):
-        self.close_connection()
+    def set_client(self, client):
+        self.client = client
 
-    def query_by_alma_status(collection):
-        __connect_to_mongodb(self)
-        query = {status_field: status_value}
-        matching_records = collection.find(query)
-        record_list = list(matching_records)
-        client.close()
-        return record_list
-
-    def __connect_to_mongodb(self):
-        client = pymongo.MongoClient(os.getenv("MONGO_URL"))
-        db = client[os.getenv("MONGO_DB")]
-        collection = db[os.getenv("MONGO_TEST_COLLECTION")]
-        return collection
+    def set_db(self, db):
+        self.db = db        
     
