@@ -2,6 +2,7 @@ import pymongo
 import os
 import logging
 
+
 class MongoUtil():
 
     logger = logging.getLogger('etd_alma_monitor')
@@ -13,7 +14,7 @@ class MongoUtil():
         self.db = self.client[os.getenv("MONGO_DB")]
         self.collection = self.db[os.getenv("MONGO_TEST_COLLECTION")]
 
-    def insert_record(self, record):
+    def insert_record(self, record):  # pragma: no cover, not currently used by app
         self.collection.insert_one(record)
 
     def insert_records(self, records):
@@ -22,11 +23,11 @@ class MongoUtil():
     def query_records(self, query={}, fields=None):
         if fields is not None:
             return list(self.collection.find(query, fields))
-        else:
+        else:  # pragma: no cover, not currently used by app
             return list(self.collection.find(query))
 
     def delete_records(self):
-        result = self.collection.delete_many({})
+        self.collection.delete_many({})
 
     def close_connection(self):
         self.client.close()
@@ -37,10 +38,3 @@ class MongoUtil():
     # we use this if we want to set to the test collection for testing
     def set_collection(self, collection):
         self.collection = collection
-
-    def set_client(self, client):
-        self.client = client
-
-    def set_db(self, db):
-        self.db = db        
-    
