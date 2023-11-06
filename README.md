@@ -101,3 +101,15 @@ NOTE: you should see a pipeline with your new tag.  (if not, click on the "scan 
 ### Using OpenTelemetry for tracing
 
 This app uses OpenTelemetry (https://opentelemetry.io/) for live tracing. To see how it is implemented in the application, refer to this wiki: https://wiki.harvard.edu/confluence/display/LibraryTechServices/OpenTelemetry
+
+
+### Notes on mongo test collection
+- The integration test uses the "etd_test" collection (as configured in .env), separate from the main collection ("etd")
+- In addition there is a utility script (not used by the app), to create test records in the test collection for use in development
+- - exec into container (see above)
+- - `python3 scripts/test_collection_utils.py` (will give usage)
+- - `python3 scripts/test_collection_utils.py` {add,query,delete}
+- - add: 3 recs, 2 with status we want, 1 with status we don't want
+- - query: returns (prints) 2 record with correct status
+- - delete: remove records
+
