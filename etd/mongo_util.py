@@ -14,7 +14,7 @@ class MongoUtil():
         self.db = self.client[os.getenv("MONGO_DB")]
         self.collection = self.db[os.getenv("MONGO_TEST_COLLECTION")]
 
-    def insert_record(self, record):  # pragma: no cover, not currently used by app
+    def insert_record(self, record):  # pragma: no cover, not currently used
         self.collection.insert_one(record)
 
     def insert_records(self, records):
