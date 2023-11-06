@@ -84,6 +84,15 @@ app.steps["worker"].add(LivenessProbe)
 
 @app.task(serializer='json', name='etd-alma-monitor-service.tasks.send_to_drs')
 def invoke_dims(json_message):
+    # Here we need to add these steps, with methods in teh etd/alma_monitor.py
+    # First is already there, steps 2-4 need to be built out
+    # Rename invoke_dims above to something more generic and use below?
+    # 1. call etd/etd_alma_monitor.poll_for_alma_submissions
+    # 2. Check if records are in Alma (call etd/etd_alma_monitor.check_alma)
+    # 3. If records are in Alma, call etd/etd_alma_monitor.update_alma_status
+    # 4. Create DRS object (call etd/etd_alma_monitor.create_drs_object)
+    # 5. Invoke DIMS (call etd/etd_alma_monitor.invoke_dims)
+
     ctx = None
     if "traceparent" in json_message:  # pragma: no cover, tracing is not being tested # noqa: E501
         carrier = {"traceparent": json_message["traceparent"]}
