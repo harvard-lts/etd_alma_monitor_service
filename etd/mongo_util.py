@@ -3,7 +3,7 @@ import os
 import logging
 
 
-class MongoUtil():
+class MongoUtil():   # pragma: no cover, not used by unit tests
 
     logger = logging.getLogger('etd_alma_monitor')
     status_field = "alma_submission_status"

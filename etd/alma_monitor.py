@@ -42,7 +42,7 @@ class AlmaMonitor():
         self.logger.info("Starting poll for alma submissions")
         mongo_util = MongoUtil()
         matching_records = []
-        if test_collection is not None:
+        if test_collection is not None:  # pragma: no cover, only changes collection # noqa
             mongo_util.set_collection(mongo_util.db[test_collection])
         try:
             matching_records = mongo_util.query_records(query, fields)
@@ -53,6 +53,7 @@ class AlmaMonitor():
             current_span.set_status(Status(StatusCode.ERROR))
             current_span.add_event("Unable to query mongo for records")
             current_span.record_exception(e)
+            raise e
         record_list = list(matching_records)
         self.logger.debug(f"Record list: {record_list}")
         mongo_util.close_connection()
