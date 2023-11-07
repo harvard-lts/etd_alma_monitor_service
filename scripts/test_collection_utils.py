@@ -20,7 +20,8 @@ def add_records(collection):  # pragma: no cover, script for one-off testing  # 
             "insertion_date": datetime.datetime.now().isoformat(),
             "last_modified_date": datetime.datetime.now().isoformat(),
             "alma_dropbox_submission_date":
-            datetime.datetime.now().isoformat()
+            datetime.datetime.now().isoformat(),
+            "directory_id": "proquest1234-5678-gsd"
         },
         {
             "proquest_id": 2345678,
@@ -29,7 +30,8 @@ def add_records(collection):  # pragma: no cover, script for one-off testing  # 
             "insertion_date": datetime.datetime.now().isoformat(),
             "last_modified_date": datetime.datetime.now().isoformat(),
             "alma_dropbox_submission_date":
-            datetime.datetime.now().isoformat()
+            datetime.datetime.now().isoformat(),
+            "directory_id": "proquest1234-5678-dce"
         },
         {
             "proquest_id": 3456789,
@@ -38,7 +40,8 @@ def add_records(collection):  # pragma: no cover, script for one-off testing  # 
             "insertion_date": datetime.datetime.now().isoformat(),
             "last_modified_date": datetime.datetime.now().isoformat(),
             "alma_dropbox_submission_date":
-            datetime.datetime.now().isoformat()
+            datetime.datetime.now().isoformat(),
+            "directory_id": "proquest1234-5678-college"
         }
     ]
     collection.insert_many(records)
@@ -48,7 +51,7 @@ def add_records(collection):  # pragma: no cover, script for one-off testing  # 
 def query_by_alma_status(collection):  # pragma: no cover, script for one-off testing  # noqa: E501
     query = {"alma_submission_status": "ALMA_DROPBOX"}
     fields = {"proquest_id": 1, "school_alma_dropbox": 1,
-              "alma_submission_status": 1}
+              "alma_submission_status": 1, "directory_id": 1}
     matching_records = collection.find(query, fields)
     for rec in matching_records:
         print(rec)
