@@ -57,6 +57,7 @@ class AlmaMonitor():
             "invoke_alma_monitor_monitor_alma_and_invoke_dims")
     def monitor_alma_and_invoke_dims(self):
         record_list = self.poll_for_alma_submissions()
+        submitted_records = []
         for record in record_list:
             current_span = trace.get_current_span()
             current_span.add_event("checking Alma for pqid {}"
@@ -64,10 +65,11 @@ class AlmaMonitor():
             try:
                 alma_id = self.get_alma_id(record[mongo_util.FIELD_PQ_ID])
                 if alma_id is not None:
-                    current_span.add_event("{} found in Alma"
-                                    .format(record[mongo_util.FIELD_PQ_ID]))
-                    self.mongoutil.update_status(record[mongo_util.FIELD_PQ_ID],
-                                                 mongo_util.ALMA_STATUS)
+                    submitted_records.append(alma_id)
+                    current_span.add_event("{} found in Alma".format(
+                        record[mongo_util.FIELD_PQ_ID]))
+                    self.mongoutil.update_status(
+                        record[mongo_util.FIELD_PQ_ID], mongo_util.ALMA_STATUS)
                     self.invoke_dims(record, alma_id)
             except Exception as e:
                 self.logger.error(f"Error querying records: {e}")
@@ -76,8 +78,9 @@ class AlmaMonitor():
                 current_span.record_exception(e)
                 self.mongoutil.close_connection()
                 raise e
-  
+
         self.mongoutil.close_connection()
+        return submitted_records
 
     @tracer.start_as_current_span(
             "invoke_alma_monitor_poll_for_alma_submissions")
@@ -100,11 +103,11 @@ class AlmaMonitor():
                  mongo_util.ALMA_DROPBOX_STATUS}
         fields = {mongo_util.FIELD_PQ_ID: 1,
                   mongo_util.FIELD_SCHOOL_ALMA_DROPBOX: 1,
-                    mongo_util.FIELD_SUBMISSION_STATUS: 1,
-                    mongo_util.FIELD_DIRECTORY_ID: 1}
+                  mongo_util.FIELD_SUBMISSION_STATUS: 1,
+                  mongo_util.FIELD_DIRECTORY_ID: 1}
         self.logger.info("Starting poll for alma submissions")
         matching_records = []
-            
+
         try:
             matching_records = self.mongoutil.query_records(query, fields)
             self.logger.info("Found {len(matching_records)} \
@@ -119,7 +122,7 @@ class AlmaMonitor():
         record_list = list(matching_records)
         self.logger.debug(f"Record list: {record_list}")
         return record_list
-    
+
     def get_alma_id(self, proquest_id):
         alma_sru_base = os.getenv("ALMA_SRU_BASE") + proquest_id
         response = requests.get(alma_sru_base)
@@ -130,17 +133,18 @@ class AlmaMonitor():
             return None
         else:
             raise Exception(f"Unexpected number of records: {num_records}")
-    
+
     def get_number_alma_records(self, xml_response):
         root = ET.fromstring(xml_response)
         num_records_entry = root.find("xb:numberOfRecords", namespaces)
         if num_records_entry is not None:
             return int(num_records_entry.text)
         return 0
-    
+
     def get_alma_record_id(self, xml_response):
         root = ET.fromstring(xml_response)
-        record_id_entry = root.find(".//xb:records/xb:record/xb:recordIdentifier", namespaces)
+        record_id_entry = root.find(
+            ".//xb:records/xb:record/xb:recordIdentifier", namespaces)
         if record_id_entry is not None:
             return record_id_entry.text
         return None
@@ -153,9 +157,9 @@ class AlmaMonitor():
         if not os.path.isdir(submission_dir):
             raise Exception("Submission directory \
                             {} not found".format(submission_dir))
-        
+
         extractd_dir = self.__unzip_submission(submission_dir)
-         # Get the zip file and unzip it
+        # Get the zip file and unzip it
         if extractd_dir is None:
             raise Exception("Error unzipping submission \
                             {}".format(submission_dir))
@@ -163,19 +167,21 @@ class AlmaMonitor():
         mets_file = os.path.join(extractd_dir, "mets.xml")
         if not os.path.isfile(mets_file):
             raise Exception(f"mets.xml not found in {extractd_dir}")
-        
+
         # Use the mets extractor
         mets_extractor = MetsExtractor(mets_file)
 
         # Build the json DIMS data
-        dims_json = self.__build_base_json_dims_data(mets_extractor, alma_id, record, data_dir)
-        file_info_json = self.__build_file_info_json_data(extractd_dir, record, mets_extractor)
+        dims_json = self.__build_base_json_dims_data(
+            mets_extractor, alma_id, record, data_dir)
+        file_info_json = self.__build_file_info_json_data(
+            extractd_dir, record, mets_extractor)
         dims_json["admin_metadata"]["file_info"] = file_info_json
 
-        if "unit_testing" not in record:
+        if "unit_testing" not in record: # pragma: no cover, don't call dims for unit testing # noqa
             # Call the DIMS API
             self.__call_dims_api(dims_json)
-        
+
         # Delete the extracted directory
         shutil.rmtree(extractd_dir)
         return dims_json
@@ -193,32 +199,39 @@ class AlmaMonitor():
 
         json_ingest_response = ingest_etd_export.json()
         if json_ingest_response["status"] == "failure":
-            raise Exception("DIMS Ingest call failed")     
+            raise Exception("DIMS Ingest call failed")
 
     def __unzip_submission(self, submission_dir):
         for file in os.listdir(submission_dir):
-            self.logger.debug("submission dir file: {}".format(file))
-            extracted_dir = os.path.join(submission_dir, "extracted")
-            os.makedirs(extracted_dir, exist_ok=True)
-            self.logger.debug("extracted dir: {}".format(extracted_dir))
             file_path = os.path.join(submission_dir, file)
+            self.logger.debug("submission dir file: {}".format(file))
             if os.path.isfile(file_path) and file.endswith(".zip"):
+                extracted_dir = os.path.join(submission_dir, "extracted")
+                os.makedirs(extracted_dir, exist_ok=True)
+                self.logger.debug("extracted dir: {}".format(extracted_dir))
                 # unzip the file
                 with zipfile.ZipFile(file_path, 'r') as zip_ref:
                     zip_ref.extractall(extracted_dir)
                 return extracted_dir
         return None
-    
-    def format_etd_osn(self, school_dropbox_name, filename, pq_id, amdid, degree_date):
+
+    def format_etd_osn(self, school_dropbox_name, filename,
+                       pq_id, amdid, degree_date):
         '''Formats the OSN to use the format of 
-        ETD_[OBJECT_ROLE]_[SCHOOL_CODE]_[DEGREE_DATE_VALUE]_PQ_[PROQUEST_IDENTIFIER_VALUE]'''
+        ETD_[OBJECT_ROLE]_[SCHOOL_CODE]_[DEGREE_DATE_VALUE]_PQ_[PROQUEST_IDENTIFIER_VALUE]''' # noqa
         if amdid is None and os.path.basename(filename) != "mets.xml":
-            raise Exception("amdid is missing from mets for {}".format(filename), None)
+            raise Exception("amdid is missing from mets for {}"
+                            .format(filename), None)
 
         role = self.__determine_role(amdid, filename)
-        osn = "ETD_{}_{}_{}_PQ_{}".format(role, school_dropbox_name, degree_date, pq_id)
+
+        osn = "ETD_{}_{}_{}_PQ_{}".format(role, school_dropbox_name,
+                                          degree_date, pq_id)
+        if role is None:
+            osn = "ETD_{}_{}_PQ_{}".format(school_dropbox_name,
+                                           degree_date, pq_id)
         return osn
-    
+
     def __determine_role(self, amdid, filename):
         # mets.xml is the only one not in the mets.xml fileSec
         # so it will not have the amdid
@@ -236,16 +249,21 @@ class AlmaMonitor():
             return ROLE_LICENSE
         return None
 
-    def __build_base_json_dims_data(self, mets_extractor, alma_id, record, data_dir):
+    def __build_base_json_dims_data(self, mets_extractor, alma_id,
+                                    record, data_dir):
         # Use schools.py to pull owner code, billing code,
         # and urnAuthorityPath
-        owner_code = schools.school_info[record[mongo_util.FIELD_SCHOOL_ALMA_DROPBOX]]['owner_code']
-        billing_code = schools.school_info[record[mongo_util.FIELD_SCHOOL_ALMA_DROPBOX]]['billing_code']
-        urn_authority_path = schools.school_info[record[mongo_util.FIELD_SCHOOL_ALMA_DROPBOX]]['urn_authority_path']
+        owner_code = schools.school_info[
+            record[mongo_util.FIELD_SCHOOL_ALMA_DROPBOX]]['owner_code']
+        billing_code = schools.school_info[
+            record[mongo_util.FIELD_SCHOOL_ALMA_DROPBOX]]['billing_code']
+        urn_authority_path = schools.school_info[
+            record[mongo_util.FIELD_SCHOOL_ALMA_DROPBOX]]['urn_authority_path']
         # Create the json object
         dims_json = {
                 "package_id": record[mongo_util.FIELD_DIRECTORY_ID],
-                "fs_source_path": os.path.join(data_dir, record[mongo_util.FIELD_DIRECTORY_ID]),
+                "fs_source_path":
+                os.path.join(data_dir, record[mongo_util.FIELD_DIRECTORY_ID]),
                 "s3_path": "",
                 "s3_bucket_name": "",
                 "depositing_application": "ETD"
@@ -266,7 +284,8 @@ class AlmaMonitor():
         dims_json["admin_metadata"] = admin_md_json
         return dims_json
 
-    def __build_file_info_json_data(self, extractd_dir, record, mets_extractor):
+    def __build_file_info_json_data(self, extractd_dir,
+                                    record, mets_extractor):
         osn_tracker = {}
         file_info_json = {}
         for file in os.listdir(extractd_dir):
@@ -283,9 +302,12 @@ class AlmaMonitor():
 
             # If the object OSN already exists, increment the sequence
             if object_osn in osn_tracker:
-                sequence = osn_tracker[object_osn] + 1
+                sequence = osn_tracker[object_osn]
+                sequence += 1
                 osn_tracker[object_osn] = sequence
                 object_osn = object_osn + "_" + str(sequence)
+            else:
+                osn_tracker[object_osn] = 1
 
             file_osn = object_osn + "_1"
             file_info_json[file] = {

@@ -27,7 +27,7 @@ class MongoUtil():   # pragma: no cover, not used by unit tests
         self.collection.insert_many(records)
 
     def update_status(self, pqid, status):
-        query = { FIELD_PQ_ID: pqid}
+        query = {FIELD_PQ_ID: pqid}
         statusupdate = {"$set": {FIELD_SUBMISSION_STATUS: status}}
         self.collection.update_one(query, statusupdate)
 

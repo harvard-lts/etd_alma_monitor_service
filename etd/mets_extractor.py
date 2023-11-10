@@ -27,7 +27,7 @@ class MetsExtractor:
             # Get the flocat element for the file
             flocat = file.find(".//mets:FLocat", namespaces)
             href = flocat.get("{" + namespaces['xlink'] + "}href")
-            
+
             # If the href attribute matches the filename,
             # return the amdid and mimetype
             if href and href == os.path.basename(filename):
@@ -56,6 +56,7 @@ class MetsExtractor:
             if field is not None:
                 self.identifier = field.text
         return self.identifier
+
 
 class FileSecInfo:
     def __init__(self, amdid=None, mimetype=None):
