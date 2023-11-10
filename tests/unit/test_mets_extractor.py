@@ -1,9 +1,10 @@
 import os.path
+import os
 from etd.mets_extractor import MetsExtractor
 
 
 def test_mets_extractor():
-    mets_test_file = os.path.join(os.getenv("ALMA_DATA_DIR"), "mets.xml")
+    mets_test_file = os.path.join(os.getenv("ALMA_DATA_DIR", "/home/etdadm/tests/unit/data"), "mets.xml")
     mets_extractor = MetsExtractor(mets_test_file)
     amdid_thesis = mets_extractor.get_amdid_and_mimetype(
         "ES 100 Final Thesis PDF - Liam Nuttall.pdf")
