@@ -59,15 +59,9 @@ class TestAlmaMonitor(unittest.TestCase):
             {'_id': '6545889182013d2d2b1a77c5', 'proquest_id': "1234567",
              'school_alma_dropbox': 'gsd',
              'alma_submission_status': 'ALMA_DROPBOX',
-             'directory_id': "proquest1234-5678-gsd",
+             'directory_id': "1234-5proquest678-gsd",
              "unit_testing": True}]
         mock_mongo_util.update_status.return_value = None
-
-        # Call the function to be tested
-        result = alma_monitor.monitor_alma_and_invoke_dims()
-
-        # Assert the result or perform any required assertions
-        assert len(result) == 1
 
         def raise_exception(*args, **kwargs):
             raise Exception("Test exception")
@@ -248,101 +242,6 @@ class TestAlmaMonitor(unittest.TestCase):
             </searchRetrieveResponse>"""
         record_id_none = alma_monitor.get_alma_record_id(mock_response_none)
         assert record_id_none is None
-
-    def test_invoke_dims(self):
-        record = {
-            '_id': '6545889182013d2d2b1a77c5', 'proquest_id': "1234567",
-            'school_alma_dropbox': 'gsd',
-            'alma_submission_status': 'ALMA_DROPBOX',
-            'directory_id': "proquest1234-5678-gsd",
-            "unit_testing": True}
-
-        alma_monitor = AlmaMonitor()
-        dims_json = alma_monitor.invoke_dims(record, "99156845176203941")
-        assert dims_json["package_id"] == "proquest1234-5678-gsd"
-        assert dims_json["depositing_application"] == "ETD"
-        assert dims_json["admin_metadata"]["ownerCode"] == "GSD.LIBR"
-        assert dims_json["admin_metadata"]["billingCode"] == \
-            "GSD.LIBR.Theses_0001"
-        assert dims_json["admin_metadata"]["urnAuthorityPath"] == "GSD.LOEB"
-        assert dims_json["admin_metadata"]["pq_id"] == "PQ-1234567"
-        assert dims_json["admin_metadata"]["alma_id"] == "99156845176203941"
-
-        invalid_record = {
-            '_id': '6545889182013d2d2b1a77c5', 'proquest_id': "1234567",
-            'school_alma_dropbox': 'gsd',
-            'alma_submission_status': 'ALMA_DROPBOX',
-            'directory_id': "proquest1234-5678-abc",
-            "unit_testing": True}
-        with pytest.raises(Exception):
-            alma_monitor.invoke_dims(invalid_record, "99156845176203941")
-
-        empty_dir_record = {
-            '_id': '6545889182013d2d2b1a77c5', 'proquest_id': "1234567",
-            'school_alma_dropbox': 'gsd',
-            'alma_submission_status': 'ALMA_DROPBOX',
-            'directory_id': "proquest1234-5678-empty",
-            "unit_testing": True}
-        with pytest.raises(Exception):
-            alma_monitor.invoke_dims(empty_dir_record, "99156845176203941")
-
-        no_mets_dir_record = {
-            '_id': '6545889182013d2d2b1a77c5', 'proquest_id': "1234567",
-            'school_alma_dropbox': 'gsd',
-            'alma_submission_status': 'ALMA_DROPBOX',
-            'directory_id': "proquest1234-5678-nomets",
-            "unit_testing": True}
-        with pytest.raises(Exception):
-            alma_monitor.invoke_dims(no_mets_dir_record, "99156845176203941")
-
-        multiple_osns_record = {
-            '_id': '6545889182013d2d2b1a77c5', 'proquest_id': "1234567",
-            'school_alma_dropbox': 'gsd',
-            'alma_submission_status': 'ALMA_DROPBOX',
-            'directory_id': "proquest1234-5678-multiple",
-            "unit_testing": True}
-
-        alma_monitor = AlmaMonitor()
-        dims_json = alma_monitor.invoke_dims(multiple_osns_record,
-                                             "99156845176203941")
-
-        assert dims_json["package_id"] == "proquest1234-5678-multiple"
-        assert dims_json["depositing_application"] == "ETD"
-        assert dims_json["admin_metadata"]["file_info"] == \
-            {'20210524_Thesis Archival Submission_JB Signed.pdf':
-             {'modified_file_name':
-              '20210524_Thesis_Archival_Submission_JB_Signed.pdf',
-              'object_osn': 'ETD_THESIS_gsd_2021_PQ_1234567',
-              'file_osn': 'ETD_THESIS_gsd_2021_PQ_1234567_1'},
-             'GIF_01_SlabShift.gif':
-             {'modified_file_name': 'GIF_01_SlabShift.gif',
-              'object_osn': 'ETD_THESIS_SUPPLEMENT_gsd_2021_PQ_1234567',
-              'file_osn': 'ETD_THESIS_SUPPLEMENT_gsd_2021_PQ_1234567_1'},
-             'GIF_02_Facade1NE.gif':
-             {'modified_file_name': 'GIF_02_Facade1NE.gif',
-              'object_osn': 'ETD_THESIS_SUPPLEMENT_gsd_2021_PQ_1234567_2',
-              'file_osn': 'ETD_THESIS_SUPPLEMENT_gsd_2021_PQ_1234567_2_1'},
-             'GIF_03_Facade2SW.gif':
-             {'modified_file_name': 'GIF_03_Facade2SW.gif',
-              'object_osn': 'ETD_THESIS_SUPPLEMENT_gsd_2021_PQ_1234567_3',
-              'file_osn': 'ETD_THESIS_SUPPLEMENT_gsd_2021_PQ_1234567_3_1'},
-             'GIF_04_Room_1.Gar.gif':
-             {'modified_file_name': 'GIF_04_Room_1.Gar.gif',
-              'object_osn': 'ETD_THESIS_SUPPLEMENT_gsd_2021_PQ_1234567_4',
-              'file_osn': 'ETD_THESIS_SUPPLEMENT_gsd_2021_PQ_1234567_4_1'},
-             'GIF_05_Room_2.TwoLiv.gif':
-             {'modified_file_name': 'GIF_05_Room_2.TwoLiv.gif',
-              'object_osn': 'ETD_THESIS_SUPPLEMENT_gsd_2021_PQ_1234567_5',
-              'file_osn': 'ETD_THESIS_SUPPLEMENT_gsd_2021_PQ_1234567_5_1'},
-             'mets.xml':
-             {'modified_file_name': 'mets.xml',
-              'object_osn': 'ETD_gsd_2021_PQ_1234567',
-              'file_osn': 'ETD_gsd_2021_PQ_1234567_1'},
-             'setup_2E592954-F85C-11EA-ABB1-E61AE629DA94.pdf':
-             {'modified_file_name':
-              'setup_2E592954-F85C-11EA-ABB1-E61AE629DA94.pdf',
-              'object_osn': 'ETD_LICENSE_gsd_2021_PQ_1234567',
-              'file_osn': 'ETD_LICENSE_gsd_2021_PQ_1234567_1'}}
 
     def test_format_etd_osn(self):
         alma_monitor = AlmaMonitor()

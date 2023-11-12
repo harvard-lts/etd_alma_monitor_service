@@ -55,7 +55,7 @@ class AlmaMonitor():
 
     @tracer.start_as_current_span(
             "invoke_alma_monitor_monitor_alma_and_invoke_dims")
-    def monitor_alma_and_invoke_dims(self):
+    def monitor_alma_and_invoke_dims(self): # pragma: no cover, covered in integration testing # noqa
         record_list = self.poll_for_alma_submissions()
         submitted_records = []
         for record in record_list:
@@ -149,7 +149,7 @@ class AlmaMonitor():
             return record_id_entry.text
         return None
 
-    def invoke_dims(self, record, alma_id):
+    def invoke_dims(self, record, alma_id): # pragma: no cover, covered in integration testing # noqa
         # Verify the submission exists in the directory
         data_dir = os.getenv("ALMA_DATA_DIR")
         submission_dir = os.path.join(data_dir,
@@ -201,7 +201,7 @@ class AlmaMonitor():
         if json_ingest_response["status"] == "failure":
             raise Exception("DIMS Ingest call failed")
 
-    def __unzip_submission(self, submission_dir):
+    def __unzip_submission(self, submission_dir): # pragma: no cover, covered in integration testing # noqa
         for file in os.listdir(submission_dir):
             file_path = os.path.join(submission_dir, file)
             self.logger.debug("submission dir file: {}".format(file))
@@ -235,11 +235,8 @@ class AlmaMonitor():
     def __determine_role(self, amdid, filename):
         # mets.xml is the only one not in the mets.xml fileSec
         # so it will not have the amdid
-        if amdid is None:
-            if filename == "mets.xml":
-                return ROLE_DOCUMENTATION
-            else:
-                return None
+        if amdid is None and filename == "mets.xml":
+            return ROLE_DOCUMENTATION
 
         if amdid.startswith(AMD_PRIMARY):
             return ROLE_THESIS
@@ -250,7 +247,7 @@ class AlmaMonitor():
         return None
 
     def __build_base_json_dims_data(self, mets_extractor, alma_id,
-                                    record, data_dir):
+                                    record, data_dir): # pragma: no cover, covered in integration testing # noqa
         # Use schools.py to pull owner code, billing code,
         # and urnAuthorityPath
         owner_code = schools.school_info[
@@ -285,7 +282,7 @@ class AlmaMonitor():
         return dims_json
 
     def __build_file_info_json_data(self, extractd_dir,
-                                    record, mets_extractor):
+                                    record, mets_extractor): # pragma: no cover, covered in integration testing # noqa
         osn_tracker = {}
         file_info_json = {}
         for file in os.listdir(extractd_dir):

@@ -12,15 +12,23 @@ namespaces = {'mets': 'http://www.loc.gov/METS/',
 
 class MetsExtractor:
 
-    def __init__(self, mets_path) -> None:
-        tree = ET.parse(mets_path)
-        self.root = tree.getroot()
+    def __init__(self, mets_path=None) -> None: # pragma: no cover, 'set_mets_data' allows for unit testing # noqa
+        if mets_path is not None:
+            tree = ET.parse(mets_path)
+            self.root = tree.getroot()
+        else:
+            self.root = None
         self.fileSec = {}
         self.degree_date = None
         self.identifier = None
 
+    def set_mets_data(self, mets_data):
+        self.root = ET.fromstring(mets_data)
+
     def get_amdid_and_mimetype(self, filename):
         '''Get the amdid and mimetype from the fileSec'''
+        if self.root is None:
+            raise Exception("MetsExtractor not initialized with mets data")
         # Get the file elements
         files = self.root.findall(".//mets:file", namespaces)
         for file in files:
@@ -43,6 +51,8 @@ class MetsExtractor:
         '''Get the degree date from
         <dim:field mdschema="thesis" element="degree" qualifier="date">'''
         if self.degree_date is None:
+            if self.root is None:
+                raise Exception("MetsExtractor not initialized with mets data")
             field = self.root.find(".//dim:field[@mdschema='thesis'][@element='degree'][@qualifier='date']", namespaces)  # noqa
             if field is not None:
                 self.degree_date = field.text
@@ -52,6 +62,8 @@ class MetsExtractor:
         '''Get the identifier from
         <dim:field mdschema="dc" element="identifier" qualifier="other">'''
         if self.identifier is None:
+            if self.root is None:
+                raise Exception("MetsExtractor not initialized with mets data")
             field = self.root.find(".//dim:field[@mdschema='dc'][@element='identifier'][@qualifier='other']", namespaces)  # noqa
             if field is not None:
                 self.identifier = field.text
