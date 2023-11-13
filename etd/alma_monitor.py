@@ -123,7 +123,7 @@ class AlmaMonitor():
         self.logger.debug(f"Record list: {record_list}")
         return record_list
 
-    def get_alma_id(self, proquest_id):
+    def get_alma_id(self, proquest_id): # pragma: no cover, covered in integration testing # noqa
         alma_sru_base = os.getenv("ALMA_SRU_BASE") + proquest_id
         response = requests.get(alma_sru_base)
         num_records = self.get_number_alma_records(response.content)
