@@ -53,7 +53,7 @@ class TestAlmaMonitor(unittest.TestCase):
         # Mock the query_records method to return mock data
         mock_mongo_util = MockMongoUtil.return_value
         alma_monitor.get_alma_id = MagicMock(return_value="99156845176203941")
-        
+
         # Set up a mock result for the query_records method
         mock_mongo_util.query_records.return_value = [
             {'_id': '6545889182013d2d2b1a77c5', 'proquest_id': "1234567",
@@ -76,7 +76,7 @@ class TestAlmaMonitor(unittest.TestCase):
         alma_monitor = AlmaMonitor()
         mock_mongo_util = MockMongoUtil.return_value
         alma_monitor.get_alma_id = MagicMock(return_value="99156845176203941")
-        
+
         # Set up a mock result for the query_records method
         mock_mongo_util.query_records.return_value = [
             {'_id': '6545889182013d2d2b1a77c5', 'proquest_id': "1234567",
@@ -148,7 +148,7 @@ class TestAlmaMonitor(unittest.TestCase):
     def test_get_number_alma_records(self, MockMongoUtil):
         alma_monitor = AlmaMonitor()
         mock_mongo_util = MockMongoUtil.return_value
-        
+
         # Set up a mock result for the query_records method
         mock_mongo_util.query_records.return_value = [
             {'_id': '6545889182013d2d2b1a77c5', 'proquest_id': "1234567",
@@ -208,7 +208,7 @@ class TestAlmaMonitor(unittest.TestCase):
     def test_get_alma_record_id(self, MockMongoUtil):
         alma_monitor = AlmaMonitor()
         mock_mongo_util = MockMongoUtil.return_value
-        
+
         # Set up a mock result for the query_records method
         mock_mongo_util.query_records.return_value = [
             {'_id': '6545889182013d2d2b1a77c5', 'proquest_id': "1234567",
@@ -281,7 +281,7 @@ class TestAlmaMonitor(unittest.TestCase):
     def test_format_etd_osn(self, MockMongoUtil):
         alma_monitor = AlmaMonitor()
         mock_mongo_util = MockMongoUtil.return_value
-        
+
         # Set up a mock result for the query_records method
         mock_mongo_util.query_records.return_value = [
             {'_id': '6545889182013d2d2b1a77c5', 'proquest_id': "1234567",
