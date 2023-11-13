@@ -102,7 +102,7 @@ def monitor_alma_and_invoke_dims(json_message):
         if "integration_test" in json_message:
             collection = os.getenv("MONGO_INTEGRATION_TEST_COLLECTION")
         alma_monitor = AlmaMonitor(collection)
-        
+
         if FEATURE_FLAGS in json_message:
             feature_flags = json_message[FEATURE_FLAGS]
             if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
