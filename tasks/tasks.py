@@ -107,7 +107,7 @@ def monitor_alma_and_invoke_dims(json_message):
                 # Get the list of records that have been submitted to Alma
                 collection = None
                 if "integration_test" in json_message:
-                    collection = os.getenv("MONGO_INTEGRATION_TEST_COLLECTION")
+                    collection = os.getenv("MONGO_TEST_COLLECTION")
                 alma_monitor = AlmaMonitor(collection)
                 mongoutil = MongoUtil()
                 submitted_records = alma_monitor.poll_for_alma_submissions()
