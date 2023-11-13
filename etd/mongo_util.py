@@ -3,11 +3,17 @@ import os
 import logging
 
 
+FIELD_SUBMISSION_STATUS = "alma_submission_status"
+FIELD_PQ_ID = "proquest_id"
+FIELD_SCHOOL_ALMA_DROPBOX = "school_alma_dropbox"
+FIELD_DIRECTORY_ID = "directory_id"
+ALMA_DROPBOX_STATUS = "ALMA_DROPBOX"
+ALMA_STATUS = "ALMA"
+
+
 class MongoUtil():   # pragma: no cover, not used by unit tests
 
     logger = logging.getLogger('etd_alma_monitor')
-    status_field = "alma_submission_status"
-    status_value = "ALMA_DROPBOX"
 
     def __init__(self):
         self.client = pymongo.MongoClient(os.getenv("MONGO_URL"))
@@ -19,6 +25,11 @@ class MongoUtil():   # pragma: no cover, not used by unit tests
 
     def insert_records(self, records):
         self.collection.insert_many(records)
+
+    def update_status(self, pqid, status):
+        query = {FIELD_PQ_ID: pqid}
+        statusupdate = {"$set": {FIELD_SUBMISSION_STATUS: status}}
+        self.collection.update_one(query, statusupdate)
 
     def query_records(self, query={}, fields=None):
         if fields is not None:

@@ -14,7 +14,8 @@ class TestMongoIntegrationClass():
             "insertion_date": datetime.datetime.now().isoformat(),
             "last_modified_date": datetime.datetime.now().isoformat(),
             "alma_dropbox_submission_date":
-            datetime.datetime.now().isoformat()
+            datetime.datetime.now().isoformat(),
+            "directory_id": "proquest1234-5678-gsd"
         },
         {
             "proquest_id": 2345678,
@@ -23,7 +24,8 @@ class TestMongoIntegrationClass():
             "insertion_date": datetime.datetime.now().isoformat(),
             "last_modified_date": datetime.datetime.now().isoformat(),
             "alma_dropbox_submission_date":
-            datetime.datetime.now().isoformat()
+            datetime.datetime.now().isoformat(),
+            "directory_id": "proquest1234-5678-dce"
         },
         {
             "proquest_id": 3456789,
@@ -32,7 +34,8 @@ class TestMongoIntegrationClass():
             "insertion_date": datetime.datetime.now().isoformat(),
             "last_modified_date": datetime.datetime.now().isoformat(),
             "alma_dropbox_submission_date":
-            datetime.datetime.now().isoformat()
+            datetime.datetime.now().isoformat(),
+            "directory_id": "proquest1234-5678-college"
         }
     ]
 
@@ -50,10 +53,12 @@ class TestMongoIntegrationClass():
                      == 1234567)
         assert match['school_alma_dropbox'] == 'gsd'
         assert match['alma_submission_status'] == 'ALMA_DROPBOX'
+        assert match['directory_id'] == "proquest1234-5678-gsd"
         match = next(item for item in records if item["proquest_id"]
                      == 2345678)
         assert match['school_alma_dropbox'] == 'dce'
         assert match['alma_submission_status'] == 'ALMA_DROPBOX'
+        assert match['directory_id'] == "proquest1234-5678-dce"
 
         # teardown the test collection
         self.__teardown_test_collection()

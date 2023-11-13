@@ -4,7 +4,6 @@ from celery.signals import worker_ready
 from celery.signals import worker_shutdown
 from pathlib import Path
 import os
-import requests
 import logging
 import etd
 from opentelemetry import trace
@@ -17,6 +16,8 @@ from opentelemetry.sdk.resources import SERVICE_NAME
 from opentelemetry.trace.propagation.tracecontext \
     import TraceContextTextMapPropagator
 import json
+from etd.alma_monitor import AlmaMonitor
+from etd.mongo_util import MongoUtil
 
 app = Celery()
 app.config_from_object('celeryconfig')
@@ -83,15 +84,12 @@ app.steps["worker"].add(LivenessProbe)
 
 
 @app.task(serializer='json', name='etd-alma-monitor-service.tasks.send_to_drs')
-def invoke_dims(json_message):
+def monitor_alma_and_invoke_dims(json_message):
     # Here we need to add these steps, with methods in teh etd/alma_monitor.py
-    # First is already there, steps 2-4 need to be built out
-    # Rename invoke_dims above to something more generic and use below?
-    # 1. call etd/etd_alma_monitor.poll_for_alma_submissions
-    # 2. Check if records are in Alma (call etd/etd_alma_monitor.check_alma)
-    # 3. If records are in Alma, call etd/etd_alma_monitor.update_alma_status
-    # 4. Create DRS object (call etd/etd_alma_monitor.create_drs_object)
-    # 5. Invoke DIMS (call etd/etd_alma_monitor.invoke_dims)
+    # 1. call etd/alma_monitor.poll_for_alma_submissions
+    # 2. Check if records are in Alma (call etd/alma_monitor.check_alma)
+    # 3. If records are in Alma, call etd/alma_monitor.update_alma_status
+    # 4. Invoke DIMS (call etd/alma_monitor.invoke_dims)
 
     ctx = None
     if "traceparent" in json_message:  # pragma: no cover, tracing is not being tested # noqa: E501
@@ -99,27 +97,38 @@ def invoke_dims(json_message):
         ctx = TraceContextTextMapPropagator().extract(carrier)
     with tracer.start_as_current_span("send_to_drs", context=ctx) \
             as current_span:
-        logger.debug("message")
-        logger.debug(json_message)
-        if 'identifier' in json_message:
-            proquest_identifier = json_message['identifier']
-            current_span.set_attribute("identifier", proquest_identifier)
-            logger.debug("processing id: " + str(proquest_identifier))
-        dims_ingest_url = os.getenv("DIMS_INGEST_URL")
-        if dims_ingest_url is not None:  # pragma: no cover, this should be checked in the healthcheck # noqa: E501
-            # Temporarily using a get call since we are testing
-            # with a healtcheck endpoint for 'hello world'
-            r = requests.get(dims_ingest_url, verify=False)
-            logger.debug(r.text)
-            current_span.add_event(r.text)
 
         if FEATURE_FLAGS in json_message:
             feature_flags = json_message[FEATURE_FLAGS]
             if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
                     feature_flags[SEND_TO_DRS_FEATURE_FLAG] == "on":  # pragma: no cover, unit test should not create a DRS record # noqa: E501
-                # Send to DRS
                 logger.debug("FEATURE IS ON>>>>>SEND TO DRS")
                 current_span.add_event("FEATURE IS ON>>>>>SEND TO DRS")
+                # Get the list of records that have been submitted to Alma
+                collection = None
+                if "integration_test" in json_message:
+                    collection = os.getenv("MONGO_TEST_COLLECTION")
+                alma_monitor = AlmaMonitor(collection)
+                mongoutil = MongoUtil()
+                submitted_records = alma_monitor.poll_for_alma_submissions()
+                logger.debug("Alma submitted records:")
+                logger.debug(submitted_records)
+                for record in submitted_records:
+                    alma_id = alma_monitor.get_alma_id(
+                        record[etd.mongo_util.FIELD_PQ_ID])
+                    if alma_id is not None:
+                        submitted_records.append(alma_id)
+                        current_span.add_event("{} found in Alma".format(
+                            record[etd.mongo_util.FIELD_PQ_ID]))
+                        mongoutil.update_status(
+                            record[etd.mongo_util.FIELD_PQ_ID],
+                            etd.mongo_util.ALMA_STATUS)
+                        if etd.mongo_util.FIELD_DIRECTORY_ID not in record:
+                            logger.error("Directory ID not found in record {}".format(record[etd.mongo_util.FIELD_PQ_ID])) # noqa
+                            current_span.add_event("NO DIR ID FOUND for {}".format(record[etd.mongo_util.FIELD_PQ_ID])) # noqa
+                        else:
+                            # Send to DRS
+                            alma_monitor.invoke_dims(record, alma_id)
             else:
                 # Feature is off so do hello world
                 return invoke_hello_world(json_message)
