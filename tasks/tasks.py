@@ -124,10 +124,8 @@ def monitor_alma_and_invoke_dims(json_message):
                             record[etd.mongo_util.FIELD_PQ_ID],
                             etd.mongo_util.ALMA_STATUS)
                         if etd.mongo_util.FIELD_DIRECTORY_ID not in record:
-                            logger.error("Directory ID not found in record {}".
-                                format(record[etd.mongo_util.FIELD_PQ_ID]))
-                            current_span.add_event("NO DIR ID FOUND for {}".
-                                format(record[etd.mongo_util.FIELD_PQ_ID]))
+                            logger.error("Directory ID not found in record {}".format(record[etd.mongo_util.FIELD_PQ_ID])) # noqa
+                            current_span.add_event("NO DIR ID FOUND for {}".format(record[etd.mongo_util.FIELD_PQ_ID])) # noqa
                         else:
                             # Send to DRS
                             alma_monitor.invoke_dims(record, alma_id)
