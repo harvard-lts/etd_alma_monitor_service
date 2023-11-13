@@ -28,4 +28,4 @@ RUN chmod 755 /root/change_id.sh && \
 
 USER etdadm
 
-CMD ["celery", "-A", "tasks.tasks", "worker", "--loglevel=info", "--queues", "etd_ingested_into_alma"]
+CMD ["celery", "-A", "tasks.tasks", "worker", "--loglevel=info", "--queues", "in_alma_dropbox"]
