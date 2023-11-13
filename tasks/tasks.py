@@ -98,11 +98,7 @@ def monitor_alma_and_invoke_dims(json_message):
     with tracer.start_as_current_span("send_to_drs", context=ctx) \
             as current_span:
 
-        collection = None
-        if "integration_test" in json_message:
-            collection = os.getenv("MONGO_INTEGRATION_TEST_COLLECTION")
-        alma_monitor = AlmaMonitor(collection)
-
+        
         if FEATURE_FLAGS in json_message:
             feature_flags = json_message[FEATURE_FLAGS]
             if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
@@ -110,6 +106,10 @@ def monitor_alma_and_invoke_dims(json_message):
                 logger.debug("FEATURE IS ON>>>>>SEND TO DRS")
                 current_span.add_event("FEATURE IS ON>>>>>SEND TO DRS")
                 # Get the list of records that have been submitted to Alma
+                collection = None
+                if "integration_test" in json_message:
+                    collection = os.getenv("MONGO_INTEGRATION_TEST_COLLECTION")
+                alma_monitor = AlmaMonitor(collection)
                 mongoutil = MongoUtil()
                 submitted_records = alma_monitor.poll_for_alma_submissions()
                 logger.debug("Alma submitted records:")
