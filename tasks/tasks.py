@@ -98,7 +98,6 @@ def monitor_alma_and_invoke_dims(json_message):
     with tracer.start_as_current_span("send_to_drs", context=ctx) \
             as current_span:
 
-        
         if FEATURE_FLAGS in json_message:
             feature_flags = json_message[FEATURE_FLAGS]
             if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
