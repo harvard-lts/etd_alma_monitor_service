@@ -50,10 +50,10 @@ class TestAlmaMonitor(unittest.TestCase):
     @patch('etd.alma_monitor.MongoUtil')
     def test_monitor_alma_and_invoke_dims(self, MockMongoUtil):
         alma_monitor = AlmaMonitor()
-        alma_monitor.get_alma_id = MagicMock(return_value="99156845176203941")
         # Mock the query_records method to return mock data
         mock_mongo_util = MockMongoUtil.return_value
-
+        alma_monitor.get_alma_id = MagicMock(return_value="99156845176203941")
+        
         # Set up a mock result for the query_records method
         mock_mongo_util.query_records.return_value = [
             {'_id': '6545889182013d2d2b1a77c5', 'proquest_id': "1234567",
@@ -71,8 +71,20 @@ class TestAlmaMonitor(unittest.TestCase):
         with pytest.raises(Exception):
             alma_monitor.monitor_alma_and_invoke_dims()
 
-    def test_get_alma_id(self):
+    @patch('etd.alma_monitor.MongoUtil')
+    def test_get_alma_id(self, MockMongoUtil):
         alma_monitor = AlmaMonitor()
+        mock_mongo_util = MockMongoUtil.return_value
+        alma_monitor.get_alma_id = MagicMock(return_value="99156845176203941")
+        
+        # Set up a mock result for the query_records method
+        mock_mongo_util.query_records.return_value = [
+            {'_id': '6545889182013d2d2b1a77c5', 'proquest_id': "1234567",
+             'school_alma_dropbox': 'gsd',
+             'alma_submission_status': 'ALMA_DROPBOX',
+             'directory_id': "1234-5proquest678-gsd",
+             "unit_testing": True}]
+        mock_mongo_util.update_status.return_value = None
         # Mock the response from the requests.get method
         mock_response = MagicMock()
         mock_response.content = """<searchRetrieveResponse
@@ -132,8 +144,19 @@ class TestAlmaMonitor(unittest.TestCase):
             with pytest.raises(Exception):
                 alma_id = alma_monitor.get_alma_id("1234567")
 
-    def test_get_number_alma_records(self):
+    @patch('etd.alma_monitor.MongoUtil')
+    def test_get_number_alma_records(self, MockMongoUtil):
         alma_monitor = AlmaMonitor()
+        mock_mongo_util = MockMongoUtil.return_value
+        
+        # Set up a mock result for the query_records method
+        mock_mongo_util.query_records.return_value = [
+            {'_id': '6545889182013d2d2b1a77c5', 'proquest_id': "1234567",
+             'school_alma_dropbox': 'gsd',
+             'alma_submission_status': 'ALMA_DROPBOX',
+             'directory_id': "1234-5proquest678-gsd",
+             "unit_testing": True}]
+        mock_mongo_util.update_status.return_value = None
         # Mock the query_records method to return mock data
         mock_response = """<searchRetrieveResponse
             xmlns="http://www.loc.gov/zing/srw/">
@@ -181,8 +204,19 @@ class TestAlmaMonitor(unittest.TestCase):
             mock_response_none)
         assert num_records_none == 0
 
-    def test_get_alma_record_id(self):
+    @patch('etd.alma_monitor.MongoUtil')
+    def test_get_alma_record_id(self, MockMongoUtil):
         alma_monitor = AlmaMonitor()
+        mock_mongo_util = MockMongoUtil.return_value
+        
+        # Set up a mock result for the query_records method
+        mock_mongo_util.query_records.return_value = [
+            {'_id': '6545889182013d2d2b1a77c5', 'proquest_id': "1234567",
+             'school_alma_dropbox': 'gsd',
+             'alma_submission_status': 'ALMA_DROPBOX',
+             'directory_id': "1234-5proquest678-gsd",
+             "unit_testing": True}]
+        mock_mongo_util.update_status.return_value = None
         # Mock the query_records method to return mock data
         mock_response = """<searchRetrieveResponse
         xmlns="http://www.loc.gov/zing/srw/">
@@ -243,8 +277,19 @@ class TestAlmaMonitor(unittest.TestCase):
         record_id_none = alma_monitor.get_alma_record_id(mock_response_none)
         assert record_id_none is None
 
-    def test_format_etd_osn(self):
+    @patch('etd.alma_monitor.MongoUtil')
+    def test_format_etd_osn(self, MockMongoUtil):
         alma_monitor = AlmaMonitor()
+        mock_mongo_util = MockMongoUtil.return_value
+        
+        # Set up a mock result for the query_records method
+        mock_mongo_util.query_records.return_value = [
+            {'_id': '6545889182013d2d2b1a77c5', 'proquest_id': "1234567",
+             'school_alma_dropbox': 'gsd',
+             'alma_submission_status': 'ALMA_DROPBOX',
+             'directory_id': "1234-5proquest678-gsd",
+             "unit_testing": True}]
+        mock_mongo_util.update_status.return_value = None
         osn = alma_monitor.format_etd_osn("gsd", "thesis.pdf",
                                           "12345", "amd_primary", "2023")
         assert osn == "ETD_THESIS_gsd_2023_PQ_12345"
