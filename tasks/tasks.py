@@ -97,7 +97,11 @@ def monitor_alma_and_invoke_dims(json_message):
         ctx = TraceContextTextMapPropagator().extract(carrier)
     with tracer.start_as_current_span("send_to_drs", context=ctx) \
             as current_span:
-        alma_monitor = AlmaMonitor()
+
+        collection = None
+        if "integration_test" in json_message:
+            collection = os.getenv("MONGO_INTEGRATION_TEST_COLLECTION")
+        alma_monitor = AlmaMonitor(collection)
         mongoutil = MongoUtil()
 
         if FEATURE_FLAGS in json_message:
