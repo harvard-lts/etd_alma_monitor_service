@@ -123,8 +123,14 @@ def monitor_alma_and_invoke_dims(json_message):
                         mongoutil.update_status(
                             record[etd.mongo_util.FIELD_PQ_ID],
                             etd.mongo_util.ALMA_STATUS)
-                        # Send to DRS
-                        alma_monitor.invoke_dims(record, alma_id)
+                        if etd.mongo_util.FIELD_DIRECTORY_ID not in record:
+                            logger.error("Directory ID not found in record {}".
+                                format(record[etd.mongo_util.FIELD_PQ_ID]))
+                            current_span.add_event("NO DIR ID FOUND for {}".
+                                format(record[etd.mongo_util.FIELD_PQ_ID]))
+                        else:
+                            # Send to DRS
+                            alma_monitor.invoke_dims(record, alma_id)
             else:
                 # Feature is off so do hello world
                 return invoke_hello_world(json_message)
