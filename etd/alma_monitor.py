@@ -1,6 +1,6 @@
 import logging
-from mongo_util import MongoUtil
-import mongo_util
+from etd.mongo_util import MongoUtil
+import etd.mongo_util as mongo_util
 from . import configure_logger
 import os
 import requests
