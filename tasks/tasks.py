@@ -102,8 +102,7 @@ def monitor_alma_and_invoke_dims(json_message):
         if "integration_test" in json_message:
             collection = os.getenv("MONGO_INTEGRATION_TEST_COLLECTION")
         alma_monitor = AlmaMonitor(collection)
-        mongoutil = MongoUtil()
-
+        
         if FEATURE_FLAGS in json_message:
             feature_flags = json_message[FEATURE_FLAGS]
             if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
@@ -111,6 +110,7 @@ def monitor_alma_and_invoke_dims(json_message):
                 logger.debug("FEATURE IS ON>>>>>SEND TO DRS")
                 current_span.add_event("FEATURE IS ON>>>>>SEND TO DRS")
                 # Get the list of records that have been submitted to Alma
+                mongoutil = MongoUtil()
                 submitted_records = alma_monitor.poll_for_alma_submissions()
                 logger.debug("Alma submitted records:")
                 logger.debug(submitted_records)
