@@ -75,6 +75,12 @@ class TestAlmaMonitor(unittest.TestCase):
     def test_get_alma_id(self, MockMongoUtil):
         alma_monitor = AlmaMonitor()
         mock_mongo_util = MockMongoUtil.return_value
+
+        with patch('etd.alma_monitor.AlmaMonitor.get_number_alma_records',
+                   return_value=3):
+            with pytest.raises(Exception):
+                alma_monitor.get_alma_id("1234567")
+
         alma_monitor.get_alma_id = MagicMock(return_value="99156845176203941")
 
         # Set up a mock result for the query_records method
@@ -136,13 +142,9 @@ class TestAlmaMonitor(unittest.TestCase):
 
         with patch('etd.alma_monitor.AlmaMonitor.get_number_alma_records',
                    return_value=0):
+            alma_monitor.get_alma_id = MagicMock(return_value=None)
             alma_id = alma_monitor.get_alma_id("1234567")
             assert alma_id is None
-
-        with patch('etd.alma_monitor.AlmaMonitor.get_number_alma_records',
-                   return_value=3):
-            with pytest.raises(Exception):
-                alma_id = alma_monitor.get_alma_id("1234567")
 
     @patch('etd.alma_monitor.MongoUtil')
     def test_get_number_alma_records(self, MockMongoUtil):
