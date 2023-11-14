@@ -55,35 +55,6 @@ class AlmaMonitor():
     logger = logging.getLogger('etd_alma_monitor')
 
     @tracer.start_as_current_span(
-            "invoke_alma_monitor_monitor_alma_and_invoke_dims")
-    def monitor_alma_and_invoke_dims(self): # pragma: no cover, covered in integration testing # noqa
-        record_list = self.poll_for_alma_submissions()
-        submitted_records = []
-        for record in record_list:
-            current_span = trace.get_current_span()
-            current_span.add_event("checking Alma for pqid {}"
-                                   .format(record[mongo_util.FIELD_PQ_ID]))
-            try:
-                alma_id = self.get_alma_id(record[mongo_util.FIELD_PQ_ID])
-                if alma_id is not None:
-                    submitted_records.append(alma_id)
-                    current_span.add_event("{} found in Alma".format(
-                        record[mongo_util.FIELD_PQ_ID]))
-                    self.mongoutil.update_status(
-                        record[mongo_util.FIELD_PQ_ID], mongo_util.ALMA_STATUS)
-                    self.invoke_dims(record, alma_id)
-            except Exception as e:
-                self.logger.error(f"Error querying records: {e}")
-                current_span.set_status(Status(StatusCode.ERROR))
-                current_span.add_event("error checking Alma for pqid")
-                current_span.record_exception(e)
-                self.mongoutil.close_connection()
-                raise e
-
-        self.mongoutil.close_connection()
-        return submitted_records
-
-    @tracer.start_as_current_span(
             "invoke_alma_monitor_poll_for_alma_submissions")
     def poll_for_alma_submissions(self):
         """
@@ -150,6 +121,8 @@ class AlmaMonitor():
             return record_id_entry.text
         return None
 
+    @tracer.start_as_current_span(
+            "invoke_alma_monitor_invoke_dims")
     def invoke_dims(self, record, alma_id): # pragma: no cover, covered in integration testing # noqa
         # Verify the submission exists in the directory
         data_dir = os.getenv("ALMA_DATA_DIR")
@@ -169,6 +142,9 @@ class AlmaMonitor():
         if not os.path.isfile(mets_file):
             raise Exception(f"mets.xml not found in {extractd_dir}")
 
+        current_span = trace.get_current_span()
+        current_span.add_event("Extracting mets {}"
+                               .format(mets_file))
         # Use the mets extractor
         mets_extractor = MetsExtractor(mets_file)
 
@@ -185,8 +161,10 @@ class AlmaMonitor():
             dims_json["admin_metadata"]["successMethod"] = "all"
         # Delete the extracted directory
         shutil.rmtree(extractd_dir)
+        current_span.add_event("Built DiMS JSON {}".format(mets_file))
         if "unit_testing" not in record: # pragma: no cover, don't call dims for unit testing # noqa
             # Call the DIMS API
+            current_span.add_event("Calling DIMS API")
             self.__call_dims_api(dims_json)
 
         return dims_json

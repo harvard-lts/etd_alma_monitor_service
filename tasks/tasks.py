@@ -132,6 +132,7 @@ def monitor_alma_and_invoke_dims(json_message):
                             record[FIELD_PQ_ID]))
                         mongoutil.update_status(
                             record[FIELD_PQ_ID],
+                            ALMA_DROPBOX_STATUS,
                             ALMA_STATUS)
                         if FIELD_DIRECTORY_ID not in record:
                             logger.error("Directory ID not found in record {}".format(record[FIELD_PQ_ID])) # noqa

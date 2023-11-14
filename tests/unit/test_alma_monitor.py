@@ -48,30 +48,6 @@ class TestAlmaMonitor(unittest.TestCase):
             alma_monitor.poll_for_alma_submissions()
 
     @patch('etd.alma_monitor.MongoUtil')
-    def test_monitor_alma_and_invoke_dims(self, MockMongoUtil):
-        alma_monitor = AlmaMonitor()
-        # Mock the query_records method to return mock data
-        mock_mongo_util = MockMongoUtil.return_value
-        alma_monitor.get_alma_id = MagicMock(return_value="99156845176203941")
-
-        # Set up a mock result for the query_records method
-        mock_mongo_util.query_records.return_value = [
-            {'_id': '6545889182013d2d2b1a77c5', 'proquest_id': "1234567",
-             'school_alma_dropbox': 'gsd',
-             'alma_submission_status': 'ALMA_DROPBOX',
-             'directory_id': "1234-5proquest678-gsd",
-             "unit_testing": True}]
-        mock_mongo_util.update_status.return_value = None
-
-        def raise_exception(*args, **kwargs):
-            raise Exception("Test exception")
-
-        alma_monitor.get_alma_id.side_effect = raise_exception
-
-        with pytest.raises(Exception):
-            alma_monitor.monitor_alma_and_invoke_dims()
-
-    @patch('etd.alma_monitor.MongoUtil')
     def test_get_alma_id(self, MockMongoUtil):
         alma_monitor = AlmaMonitor()
         mock_mongo_util = MockMongoUtil.return_value
