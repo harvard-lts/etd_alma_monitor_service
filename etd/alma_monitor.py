@@ -322,7 +322,21 @@ class AlmaMonitor():
             file_info_json[file] = {
                 "modified_file_name": modified_file_name,
                 "object_osn": object_osn,
-                "file_osn": file_osn
+                "file_osn": file_osn,
+                "object_role": self.__extract_role_from_osn(object_osn)
             }
 
         return file_info_json
+
+    def __extract_role_from_osn(self, osn):
+        # mets.xml is the only one not in the mets.xml fileSec
+        # so it will not have the amdid
+        if ROLE_DOCUMENTATION in osn:
+            return ROLE_DOCUMENTATION
+        elif ROLE_SUPPLEMENT in osn:
+            return ROLE_SUPPLEMENT
+        elif ROLE_LICENSE in osn:
+            return ROLE_LICENSE
+        elif ROLE_THESIS in osn:
+            return ROLE_THESIS
+        return None
