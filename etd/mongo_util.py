@@ -29,6 +29,7 @@ class MongoUtil():   # pragma: no cover, not used by unit tests
     def update_status(self, pqid, status):
         query = {FIELD_PQ_ID: pqid}
         statusupdate = {"$set": {FIELD_SUBMISSION_STATUS: status}}
+        self.logger.debug("Updating status for {} to {}".format(pqid, status))
         self.collection.update_one(query, statusupdate)
 
     def query_records(self, query={}, fields=None):
