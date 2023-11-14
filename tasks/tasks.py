@@ -130,16 +130,22 @@ def monitor_alma_and_invoke_dims(json_message):
                     if alma_id is not None:
                         current_span.add_event("{} found in Alma".format(
                             record[FIELD_PQ_ID]))
-                        mongoutil.update_status(
-                            record[FIELD_PQ_ID],
-                            ALMA_DROPBOX_STATUS,
-                            ALMA_STATUS)
                         if FIELD_DIRECTORY_ID not in record:
                             logger.error("Directory ID not found in record {}".format(record[FIELD_PQ_ID])) # noqa
                             current_span.add_event("NO DIR ID FOUND for {}".format(record[FIELD_PQ_ID])) # noqa
+                            query = {FIELD_PQ_ID: record[FIELD_PQ_ID],
+                                 FIELD_DIRECTORY_ID: record[FIELD_DIRECTORY_ID]} # noqa
+                            mongoutil.update_status(
+                                query,
+                                ALMA_STATUS)
                         else:
                             # Send to DRS
                             alma_monitor.invoke_dims(record, alma_id)
+                            query = {FIELD_PQ_ID: record[FIELD_PQ_ID],
+                                 FIELD_SUBMISSION_STATUS: ALMA_DROPBOX_STATUS} # noqa
+                            mongoutil.update_status(
+                                query,
+                                ALMA_STATUS)
             else:
                 # Feature is off so do hello world
                 return invoke_hello_world(json_message)
