@@ -235,7 +235,7 @@ class AlmaMonitor():
     def __determine_role(self, amdid, filename):
         # mets.xml is the only one not in the mets.xml fileSec
         # so it will not have the amdid
-        if amdid is None and filename == "mets.xml":
+        if amdid is None and os.path.basename(filename) == "mets.xml":
             return ROLE_DOCUMENTATION
 
         if amdid.startswith(AMD_PRIMARY):
