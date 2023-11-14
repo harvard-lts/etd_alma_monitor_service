@@ -121,8 +121,11 @@ def monitor_alma_and_invoke_dims(json_message):
                 logger.debug(submitted_records)
                 for record in submitted_records:
                     logger.debug("Record: {}".format(record))
-                    alma_id = alma_monitor.get_alma_id(
-                        record[FIELD_PQ_ID])
+                    if "integration_test" in json_message:
+                        alma_id = os.getenv("INTEGRATION_TEST_ALMA_ID")
+                    else:
+                        alma_id = alma_monitor.get_alma_id(
+                            record[FIELD_PQ_ID])
                     if alma_id is not None:
                         current_span.add_event("{} found in Alma".format(
                             record[FIELD_PQ_ID]))
