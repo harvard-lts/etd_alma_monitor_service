@@ -177,6 +177,7 @@ class AlmaMonitor():
         file_info_json = self.__build_file_info_json_data(
             extractd_dir, record, mets_extractor)
         dims_json["admin_metadata"]["file_info"] = file_info_json
+        self.logger.debug("DIMS json: {}".format(dims_json))
 
         if "unit_testing" not in record: # pragma: no cover, don't call dims for unit testing # noqa
             # Call the DIMS API
@@ -188,7 +189,7 @@ class AlmaMonitor():
 
     def __call_dims_api(self, payload_data): # pragma: no cover, no calling dims for testing # noqa
         dims_endpoint = os.getenv('DIMS_INGEST_URL')
-
+        self.logger.debug("DIMS endpoint: {}".format(dims_endpoint))
         # Call DIMS ingest
         ingest_etd_export = None
 
