@@ -257,11 +257,22 @@ class AlmaMonitor():
             record[mongo_util.FIELD_SCHOOL_ALMA_DROPBOX]]['billing_code']
         urn_authority_path = schools.school_info[
             record[mongo_util.FIELD_SCHOOL_ALMA_DROPBOX]]['urn_authority_path']
+        submission_dir = os.path.join(data_dir,
+                                      record[mongo_util.FIELD_DIRECTORY_ID])
+        zip_file = None
+        for file in os.listdir(submission_dir):
+            file_path = os.path.join(submission_dir, file)
+            self.logger.debug("submission dir file: {}".format(file))
+            if os.path.isfile(file_path) and file.endswith(".zip"):
+                zip_file = file_path
+                break
+        if zip_file is None:
+            raise Exception("No zip file found in {}".format(submission_dir))
+        fs_source_path = os.path.join(submission_dir, zip_file)
         # Create the json object
         dims_json = {
                 "package_id": record[mongo_util.FIELD_DIRECTORY_ID],
-                "fs_source_path":
-                os.path.join(data_dir, record[mongo_util.FIELD_DIRECTORY_ID]),
+                "fs_source_path": fs_source_path,
                 "s3_path": "",
                 "s3_bucket_name": "",
                 "depositing_application": "ETD"
