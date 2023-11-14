@@ -10,6 +10,7 @@ import zipfile
 import etd.schools as schools
 import shutil
 import re
+from datetime import datetime
 from opentelemetry import trace
 from opentelemetry.trace import Status
 from opentelemetry.trace import StatusCode
@@ -220,7 +221,7 @@ class AlmaMonitor():
         return None
 
     def format_etd_osn(self, school_dropbox_name, filename,
-                       pq_id, amdid, degree_date):
+                       pq_id, amdid, degree_date, integration_testing=False):
         '''Formats the OSN to use the format of 
         ETD_[OBJECT_ROLE]_[SCHOOL_CODE]_[DEGREE_DATE_VALUE]_PQ_[PROQUEST_IDENTIFIER_VALUE]''' # noqa
         if amdid is None and os.path.basename(filename) != "mets.xml":
@@ -234,6 +235,9 @@ class AlmaMonitor():
         if role is None:
             osn = "ETD_{}_{}_PQ_{}".format(school_dropbox_name,
                                            degree_date, pq_id)
+        if integration_testing:
+            osn_unique_appender = str(int(datetime.now().timestamp())) # pragma: no cover, covered in integration testing # noqa
+            osn = osn + "_" + osn_unique_appender
         return osn
 
     def __determine_role(self, amdid, filename):
