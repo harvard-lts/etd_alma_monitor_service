@@ -10,6 +10,7 @@ import zipfile
 import etd.schools as schools
 import shutil
 import re
+from datetime import datetime
 from opentelemetry import trace
 from opentelemetry.trace import Status
 from opentelemetry.trace import StatusCode
@@ -149,6 +150,8 @@ class AlmaMonitor():
             return record_id_entry.text
         return None
 
+    @tracer.start_as_current_span(
+            "invoke_alma_monitor_invoke_dims")
     def invoke_dims(self, record, alma_id): # pragma: no cover, covered in integration testing # noqa
         # Verify the submission exists in the directory
         data_dir = os.getenv("ALMA_DATA_DIR")
@@ -168,6 +171,9 @@ class AlmaMonitor():
         if not os.path.isfile(mets_file):
             raise Exception(f"mets.xml not found in {extractd_dir}")
 
+        current_span = trace.get_current_span()
+        current_span.add_event("Extracting mets {}"
+                               .format(mets_file))
         # Use the mets extractor
         mets_extractor = MetsExtractor(mets_file)
 
@@ -177,17 +183,24 @@ class AlmaMonitor():
         file_info_json = self.__build_file_info_json_data(
             extractd_dir, record, mets_extractor)
         dims_json["admin_metadata"]["file_info"] = file_info_json
+        self.logger.debug("DIMS json: {}".format(dims_json))
 
-        if "unit_testing" not in record: # pragma: no cover, don't call dims for unit testing # noqa
-            # Call the DIMS API
-            self.__call_dims_api(dims_json)
-
+        # If this is an integration test, set the successMethod to all
+        if "integration_test" in record:
+            dims_json["admin_metadata"]["successMethod"] = "all"
         # Delete the extracted directory
         shutil.rmtree(extractd_dir)
+        current_span.add_event("Built DiMS JSON {}".format(mets_file))
+        if "unit_testing" not in record: # pragma: no cover, don't call dims for unit testing # noqa
+            # Call the DIMS API
+            current_span.add_event("Calling DIMS API")
+            self.__call_dims_api(dims_json)
         return dims_json
 
     def __call_dims_api(self, payload_data): # pragma: no cover, no calling dims for testing # noqa
         dims_endpoint = os.getenv('DIMS_INGEST_URL')
+
+        self.logger.debug("DIMS endpoint: {}".format(dims_endpoint))
 
         # Call DIMS ingest
         ingest_etd_export = None
@@ -216,7 +229,7 @@ class AlmaMonitor():
         return None
 
     def format_etd_osn(self, school_dropbox_name, filename,
-                       pq_id, amdid, degree_date):
+                       pq_id, amdid, degree_date, integration_testing=False):
         '''Formats the OSN to use the format of 
         ETD_[OBJECT_ROLE]_[SCHOOL_CODE]_[DEGREE_DATE_VALUE]_PQ_[PROQUEST_IDENTIFIER_VALUE]''' # noqa
         if amdid is None and os.path.basename(filename) != "mets.xml":
@@ -230,12 +243,16 @@ class AlmaMonitor():
         if role is None:
             osn = "ETD_{}_{}_PQ_{}".format(school_dropbox_name,
                                            degree_date, pq_id)
+
+        if integration_testing:
+            osn_unique_appender = str(int(datetime.now().timestamp())) # pragma: no cover, covered in integration testing # noqa
+            osn = osn + "_" + osn_unique_appender # pragma: no cover, covered in integration testing # noqa
         return osn
 
     def __determine_role(self, amdid, filename):
         # mets.xml is the only one not in the mets.xml fileSec
         # so it will not have the amdid
-        if amdid is None and filename == "mets.xml":
+        if amdid is None and os.path.basename(filename) == "mets.xml":
             return ROLE_DOCUMENTATION
 
         if amdid.startswith(AMD_PRIMARY):
@@ -256,11 +273,22 @@ class AlmaMonitor():
             record[mongo_util.FIELD_SCHOOL_ALMA_DROPBOX]]['billing_code']
         urn_authority_path = schools.school_info[
             record[mongo_util.FIELD_SCHOOL_ALMA_DROPBOX]]['urn_authority_path']
+        submission_dir = os.path.join(data_dir,
+                                      record[mongo_util.FIELD_DIRECTORY_ID])
+        zip_file = None
+        for file in os.listdir(submission_dir):
+            file_path = os.path.join(submission_dir, file)
+            self.logger.debug("submission dir file: {}".format(file))
+            if os.path.isfile(file_path) and file.endswith(".zip"):
+                zip_file = file_path
+                break
+        if zip_file is None:
+            raise Exception("No zip file found in {}".format(submission_dir))
+        fs_source_path = os.path.join(submission_dir, zip_file)
         # Create the json object
         dims_json = {
                 "package_id": record[mongo_util.FIELD_DIRECTORY_ID],
-                "fs_source_path":
-                os.path.join(data_dir, record[mongo_util.FIELD_DIRECTORY_ID]),
+                "fs_source_path": fs_source_path,
                 "s3_path": "",
                 "s3_bucket_name": "",
                 "depositing_application": "ETD"
@@ -289,13 +317,16 @@ class AlmaMonitor():
             modified_file_name = re.sub(r"[^\w\d\.\-]", "_", file)
             file_path = os.path.join(extractd_dir, file)
             self.logger.debug("file path: {}".format(file_path))
+            int_test = False
+            if "integration_test" in record:
+                int_test = True
             # Build the object and file OSNs
             object_osn = self.format_etd_osn(
                 record[mongo_util.FIELD_SCHOOL_ALMA_DROPBOX],
                 file_path,
                 record[mongo_util.FIELD_PQ_ID],
                 mets_extractor.get_amdid_and_mimetype(file_path).amdid,
-                mets_extractor.get_degree_date())
+                mets_extractor.get_degree_date(), int_test)
 
             # If the object OSN already exists, increment the sequence
             if object_osn in osn_tracker:
@@ -310,7 +341,21 @@ class AlmaMonitor():
             file_info_json[file] = {
                 "modified_file_name": modified_file_name,
                 "object_osn": object_osn,
-                "file_osn": file_osn
+                "file_osn": file_osn,
+                "object_role": self.__extract_role_from_osn(object_osn)
             }
 
         return file_info_json
+
+    def __extract_role_from_osn(self, osn): # pragma: no cover, covered in integration testing # noqa
+        # mets.xml is the only one not in the mets.xml fileSec
+        # so it will not have the amdid
+        if ROLE_DOCUMENTATION in osn:
+            return ROLE_DOCUMENTATION
+        elif ROLE_SUPPLEMENT in osn:
+            return ROLE_SUPPLEMENT
+        elif ROLE_LICENSE in osn:
+            return ROLE_LICENSE
+        elif ROLE_THESIS in osn:
+            return ROLE_THESIS
+        return None

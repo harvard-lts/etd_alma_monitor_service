@@ -26,6 +26,12 @@ logger = logging.getLogger('etd_alma_monitor')
 
 FEATURE_FLAGS = "feature_flags"
 SEND_TO_DRS_FEATURE_FLAG = "send_to_drs_feature_flag"
+FIELD_SUBMISSION_STATUS = "alma_submission_status"
+FIELD_PQ_ID = "proquest_id"
+FIELD_SCHOOL_ALMA_DROPBOX = "school_alma_dropbox"
+FIELD_DIRECTORY_ID = "directory_id"
+ALMA_DROPBOX_STATUS = "ALMA_DROPBOX"
+ALMA_STATUS = "ALMA"
 
 # tracing setup
 JAEGER_NAME = os.getenv('JAEGER_NAME')
@@ -114,21 +120,32 @@ def monitor_alma_and_invoke_dims(json_message):
                 logger.debug("Alma submitted records:")
                 logger.debug(submitted_records)
                 for record in submitted_records:
-                    alma_id = alma_monitor.get_alma_id(
-                        record[etd.mongo_util.FIELD_PQ_ID])
+                    logger.debug("Record: {}".format(record))
+                    if "integration_test" in json_message:
+                        alma_id = os.getenv("INTEGRATION_TEST_ALMA_ID")
+                        record["integration_test"] = True
+                    else:
+                        alma_id = alma_monitor.get_alma_id(
+                            record[FIELD_PQ_ID])
                     if alma_id is not None:
-                        submitted_records.append(alma_id)
                         current_span.add_event("{} found in Alma".format(
-                            record[etd.mongo_util.FIELD_PQ_ID]))
-                        mongoutil.update_status(
-                            record[etd.mongo_util.FIELD_PQ_ID],
-                            etd.mongo_util.ALMA_STATUS)
-                        if etd.mongo_util.FIELD_DIRECTORY_ID not in record:
-                            logger.error("Directory ID not found in record {}".format(record[etd.mongo_util.FIELD_PQ_ID])) # noqa
-                            current_span.add_event("NO DIR ID FOUND for {}".format(record[etd.mongo_util.FIELD_PQ_ID])) # noqa
+                            record[FIELD_PQ_ID]))
+                        if FIELD_DIRECTORY_ID not in record:
+                            logger.error("Directory ID not found in record {}".format(record[FIELD_PQ_ID])) # noqa
+                            current_span.add_event("NO DIR ID FOUND for {}".format(record[FIELD_PQ_ID])) # noqa
+                            query = {FIELD_PQ_ID: record[FIELD_PQ_ID],
+                                 FIELD_DIRECTORY_ID: record[FIELD_DIRECTORY_ID]} # noqa
+                            mongoutil.update_status(
+                                query,
+                                ALMA_STATUS)
                         else:
                             # Send to DRS
                             alma_monitor.invoke_dims(record, alma_id)
+                            query = {FIELD_PQ_ID: record[FIELD_PQ_ID],
+                                 FIELD_SUBMISSION_STATUS: ALMA_DROPBOX_STATUS} # noqa
+                            mongoutil.update_status(
+                                query,
+                                ALMA_STATUS)
             else:
                 # Feature is off so do hello world
                 return invoke_hello_world(json_message)
