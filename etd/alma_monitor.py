@@ -328,7 +328,7 @@ class AlmaMonitor():
 
         return file_info_json
 
-    def __extract_role_from_osn(self, osn):
+    def __extract_role_from_osn(self, osn): # pragma: no cover, covered in integration testing # noqa
         # mets.xml is the only one not in the mets.xml fileSec
         # so it will not have the amdid
         if ROLE_DOCUMENTATION in osn:
