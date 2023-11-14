@@ -179,6 +179,9 @@ class AlmaMonitor():
         dims_json["admin_metadata"]["file_info"] = file_info_json
         self.logger.debug("DIMS json: {}".format(dims_json))
 
+        # If this is an integration test, set the successMethod to all
+        if "integration_test" in record:
+            dims_json["admin_metadata"]["successMethod"] = "all"
         # Delete the extracted directory
         shutil.rmtree(extractd_dir)
         if "unit_testing" not in record: # pragma: no cover, don't call dims for unit testing # noqa

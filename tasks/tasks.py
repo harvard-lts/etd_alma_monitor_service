@@ -123,6 +123,7 @@ def monitor_alma_and_invoke_dims(json_message):
                     logger.debug("Record: {}".format(record))
                     if "integration_test" in json_message:
                         alma_id = os.getenv("INTEGRATION_TEST_ALMA_ID")
+                        record["integration_test"] = True
                     else:
                         alma_id = alma_monitor.get_alma_id(
                             record[FIELD_PQ_ID])
