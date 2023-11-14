@@ -55,6 +55,35 @@ class AlmaMonitor():
     logger = logging.getLogger('etd_alma_monitor')
 
     @tracer.start_as_current_span(
+            "invoke_alma_monitor_monitor_alma_and_invoke_dims")
+    def monitor_alma_and_invoke_dims(self): # pragma: no cover, covered in integration testing # noqa
+        record_list = self.poll_for_alma_submissions()
+        submitted_records = []
+        for record in record_list:
+            current_span = trace.get_current_span()
+            current_span.add_event("checking Alma for pqid {}"
+                                   .format(record[mongo_util.FIELD_PQ_ID]))
+            try:
+                alma_id = self.get_alma_id(record[mongo_util.FIELD_PQ_ID])
+                if alma_id is not None:
+                    submitted_records.append(alma_id)
+                    current_span.add_event("{} found in Alma".format(
+                        record[mongo_util.FIELD_PQ_ID]))
+                    self.mongoutil.update_status(
+                        record[mongo_util.FIELD_PQ_ID], mongo_util.ALMA_STATUS)
+                    self.invoke_dims(record, alma_id)
+            except Exception as e:
+                self.logger.error(f"Error querying records: {e}")
+                current_span.set_status(Status(StatusCode.ERROR))
+                current_span.add_event("error checking Alma for pqid")
+                current_span.record_exception(e)
+                self.mongoutil.close_connection()
+                raise e
+
+        self.mongoutil.close_connection()
+        return submitted_records
+
+    @tracer.start_as_current_span(
             "invoke_alma_monitor_poll_for_alma_submissions")
     def poll_for_alma_submissions(self):
         """
@@ -166,12 +195,13 @@ class AlmaMonitor():
             # Call the DIMS API
             current_span.add_event("Calling DIMS API")
             self.__call_dims_api(dims_json)
-
         return dims_json
 
     def __call_dims_api(self, payload_data): # pragma: no cover, no calling dims for testing # noqa
         dims_endpoint = os.getenv('DIMS_INGEST_URL')
+
         self.logger.debug("DIMS endpoint: {}".format(dims_endpoint))
+
         # Call DIMS ingest
         ingest_etd_export = None
 
@@ -213,6 +243,7 @@ class AlmaMonitor():
         if role is None:
             osn = "ETD_{}_{}_PQ_{}".format(school_dropbox_name,
                                            degree_date, pq_id)
+
         if integration_testing:
             osn_unique_appender = str(int(datetime.now().timestamp())) # pragma: no cover, covered in integration testing # noqa
             osn = osn + "_" + osn_unique_appender # pragma: no cover, covered in integration testing # noqa
