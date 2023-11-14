@@ -124,7 +124,6 @@ def monitor_alma_and_invoke_dims(json_message):
                     alma_id = alma_monitor.get_alma_id(
                         record[FIELD_PQ_ID])
                     if alma_id is not None:
-                        submitted_records.append(alma_id)
                         current_span.add_event("{} found in Alma".format(
                             record[FIELD_PQ_ID]))
                         mongoutil.update_status(
