@@ -237,7 +237,7 @@ class AlmaMonitor():
                                            degree_date, pq_id)
         if integration_testing:
             osn_unique_appender = str(int(datetime.now().timestamp())) # pragma: no cover, covered in integration testing # noqa
-            osn = osn + "_" + osn_unique_appender
+            osn = osn + "_" + osn_unique_appender # pragma: no cover, covered in integration testing # noqa
         return osn
 
     def __determine_role(self, amdid, filename):
@@ -308,13 +308,16 @@ class AlmaMonitor():
             modified_file_name = re.sub(r"[^\w\d\.\-]", "_", file)
             file_path = os.path.join(extractd_dir, file)
             self.logger.debug("file path: {}".format(file_path))
+            int_test = False
+            if "integration_test" in record:
+                int_test = True
             # Build the object and file OSNs
             object_osn = self.format_etd_osn(
                 record[mongo_util.FIELD_SCHOOL_ALMA_DROPBOX],
                 file_path,
                 record[mongo_util.FIELD_PQ_ID],
                 mets_extractor.get_amdid_and_mimetype(file_path).amdid,
-                mets_extractor.get_degree_date())
+                mets_extractor.get_degree_date(), int_test)
 
             # If the object OSN already exists, increment the sequence
             if object_osn in osn_tracker:
