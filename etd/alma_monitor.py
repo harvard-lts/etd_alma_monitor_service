@@ -179,12 +179,12 @@ class AlmaMonitor():
         dims_json["admin_metadata"]["file_info"] = file_info_json
         self.logger.debug("DIMS json: {}".format(dims_json))
 
+        # Delete the extracted directory
+        shutil.rmtree(extractd_dir)
         if "unit_testing" not in record: # pragma: no cover, don't call dims for unit testing # noqa
             # Call the DIMS API
             self.__call_dims_api(dims_json)
 
-        # Delete the extracted directory
-        shutil.rmtree(extractd_dir)
         return dims_json
 
     def __call_dims_api(self, payload_data): # pragma: no cover, no calling dims for testing # noqa
