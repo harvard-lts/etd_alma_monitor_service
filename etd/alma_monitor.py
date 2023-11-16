@@ -269,7 +269,7 @@ class AlmaMonitor():
             owner_code = "HUL.TEST"
             billing_code = "HUL.TEST.BILL_0001"
             urn_authority_path = "HUL.TEST"
-        else:    
+        else:
             # Use schools.py to pull owner code, billing code,
             # and urnAuthorityPath
             owner_code = schools.school_info[
@@ -277,7 +277,8 @@ class AlmaMonitor():
             billing_code = schools.school_info[
                 record[mongo_util.FIELD_SCHOOL_ALMA_DROPBOX]]['billing_code']
             urn_authority_path = schools.school_info[
-                record[mongo_util.FIELD_SCHOOL_ALMA_DROPBOX]]['urn_authority_path']
+                record[mongo_util.
+                       FIELD_SCHOOL_ALMA_DROPBOX]]['urn_authority_path']
         submission_dir = os.path.join(data_dir,
                                       record[mongo_util.FIELD_DIRECTORY_ID])
         zip_file = None
