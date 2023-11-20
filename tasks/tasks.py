@@ -32,6 +32,7 @@ FIELD_SCHOOL_ALMA_DROPBOX = "school_alma_dropbox"
 FIELD_DIRECTORY_ID = "directory_id"
 ALMA_DROPBOX_STATUS = "ALMA_DROPBOX"
 ALMA_STATUS = "ALMA"
+FAILED_STATUS = "FAILED"
 
 # tracing setup
 JAEGER_NAME = os.getenv('JAEGER_NAME')
@@ -139,13 +140,20 @@ def monitor_alma_and_invoke_dims(json_message):
                                 query,
                                 ALMA_STATUS)
                         else:
-                            # Send to DRS
-                            alma_monitor.invoke_dims(record, alma_id)
-                            query = {FIELD_PQ_ID: record[FIELD_PQ_ID],
-                                 FIELD_SUBMISSION_STATUS: ALMA_DROPBOX_STATUS} # noqa
-                            mongoutil.update_status(
-                                query,
-                                ALMA_STATUS)
+                            try:
+                                # Send to DRS
+                                alma_monitor.invoke_dims(record, alma_id)
+                                query = {FIELD_PQ_ID: record[FIELD_PQ_ID],
+                                    FIELD_SUBMISSION_STATUS: ALMA_DROPBOX_STATUS} # noqa
+                                mongoutil.update_status(
+                                    query,
+                                    ALMA_STATUS)
+                            except Exception:
+                                query = {FIELD_PQ_ID: record[FIELD_PQ_ID],
+                                    FIELD_SUBMISSION_STATUS: ALMA_DROPBOX_STATUS} # noqa
+                                mongoutil.update_status(
+                                    query,
+                                    FAILED_STATUS)
             else:
                 # Feature is off so do hello world
                 return invoke_hello_world(json_message)
