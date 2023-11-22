@@ -102,7 +102,8 @@ def monitor_alma_and_invoke_dims(json_message):
     if "traceparent" in json_message:  # pragma: no cover, tracing is not being tested # noqa: E501
         carrier = {"traceparent": json_message["traceparent"]}
         ctx = TraceContextTextMapPropagator().extract(carrier)
-    with tracer.start_as_current_span("ALMA MONITOR SERVICE - send_to_drs") \
+    with tracer.start_as_current_span("ALMA MONITOR SERVICE - send_to_drs",
+                                      context=ctx) \
             as current_span:
 
         if FEATURE_FLAGS in json_message:
