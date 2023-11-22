@@ -13,8 +13,8 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.resources import SERVICE_NAME
-from opentelemetry.trace.propagation.tracecontext \
-    import TraceContextTextMapPropagator
+# from opentelemetry.trace.propagation.tracecontext \
+#    import TraceContextTextMapPropagator
 import json
 from etd.alma_monitor import AlmaMonitor
 from etd.mongo_util import MongoUtil
@@ -98,12 +98,15 @@ def monitor_alma_and_invoke_dims(json_message):
     # 3. If records are in Alma, call etd/alma_monitor.update_alma_status
     # 4. Invoke DIMS (call etd/alma_monitor.invoke_dims)
 
-    ctx = None
-    if "traceparent" in json_message:  # pragma: no cover, tracing is not being tested # noqa: E501
-        carrier = {"traceparent": json_message["traceparent"]}
-        ctx = TraceContextTextMapPropagator().extract(carrier)
-    with tracer.start_as_current_span("ALMA MONITOR SERVICE - send_to_drs",
-                                      context=ctx) \
+    # ctx = None
+    # if "traceparent" in json_message:  # pragma: no cover, tracing is not being tested # noqa: E501
+    #    carrier = {"traceparent": json_message["traceparent"]}
+    #    ctx = TraceContextTextMapPropagator().extract(carrier)
+    # with tracer.start_as_current_span("ALMA MONITOR SERVICE - send_to_drs",
+    #                                  context=ctx) \
+    #        as current_span:
+
+    with tracer.start_as_current_span("ALMA MONITOR SERVICE - send_to_drs") \
             as current_span:
 
         if FEATURE_FLAGS in json_message:
@@ -189,7 +192,7 @@ def invoke_hello_world(json_message):
     if "unit_test" in json_message:
         return new_message
     carrier = {}  # pragma: no cover, tracing is not being tested # noqa: E501
-    TraceContextTextMapPropagator().inject(carrier)  # pragma: no cover, tracing is not being tested # noqa: E501
+    # TraceContextTextMapPropagator().inject(carrier)  # pragma: no cover, tracing is not being tested # noqa: E501
     traceparent = carrier["traceparent"]  # pragma: no cover, tracing is not being tested # noqa: E501
     new_message["traceparent"] = traceparent  # pragma: no cover, tracing is not being tested # noqa: E501
     current_span.add_event("to next queue")  # pragma: no cover, tracing is not being tested # noqa: E501
