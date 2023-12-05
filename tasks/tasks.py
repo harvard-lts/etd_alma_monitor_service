@@ -13,8 +13,8 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.resources import SERVICE_NAME
-# from opentelemetry.trace.propagation.tracecontext \
-#    import TraceContextTextMapPropagator
+from opentelemetry.trace.propagation.tracecontext \
+   import TraceContextTextMapPropagator
 import json
 from etd.alma_monitor import AlmaMonitor
 from etd.mongo_util import MongoUtil
@@ -108,9 +108,13 @@ def monitor_alma_and_invoke_dims(json_message):
 
     with tracer.start_as_current_span("ALMA MONITOR SERVICE - send_to_drs") \
             as current_span:
-
+        new_message = json_message
+        carrier = {}
+        TraceContextTextMapPropagator().inject(carrier)
+        traceparent = carrier["traceparent"]
         if FEATURE_FLAGS in json_message:
             feature_flags = json_message[FEATURE_FLAGS]
+            new_message["traceparent"] = traceparent
             if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
                     feature_flags[SEND_TO_DRS_FEATURE_FLAG] == "on":  # pragma: no cover, unit test should not create a DRS record # noqa: E501
                 logger.debug("FEATURE IS ON>>>>>SEND TO DRS")
@@ -161,9 +165,15 @@ def monitor_alma_and_invoke_dims(json_message):
             else:
                 # Feature is off so do hello world
                 return invoke_hello_world(json_message)
-        else:
-            # No feature flags so do hello world for now
-            return invoke_hello_world(json_message)
+
+        current_span.add_event("to next queue")  # pragma: no cover, tracing is not being tested # noqa: E501
+        app.send_task("etd-alma-drs-holding-service.tasks.add_holdings",
+                      args=[new_message], kwargs={},
+                      queue=os.getenv('PUBLISH_QUEUE_NAME'))  # pragma: no cover, does not reach this for unit testing # noqa: E501
+
+        # else:
+        #    # No feature flags so do hello world for now
+        #    return invoke_hello_world(json_message)
 
 
 # To be removed when real logic takes its place
