@@ -112,9 +112,9 @@ def monitor_alma_and_invoke_dims(json_message):
         carrier = {}
         TraceContextTextMapPropagator().inject(carrier)
         traceparent = carrier["traceparent"]
+        new_message["traceparent"] = traceparent
         if FEATURE_FLAGS in json_message:
             feature_flags = json_message[FEATURE_FLAGS]
-            new_message["traceparent"] = traceparent
             if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
                     feature_flags[SEND_TO_DRS_FEATURE_FLAG] == "on":  # pragma: no cover, unit test should not create a DRS record # noqa: E501
                 logger.debug("FEATURE IS ON>>>>>SEND TO DRS")
