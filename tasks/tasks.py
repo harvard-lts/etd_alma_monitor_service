@@ -158,6 +158,10 @@ def monitor_alma_and_invoke_dims(json_message):
                 # Feature is off so do hello world
                 return invoke_hello_world(json_message)
 
+        else:
+            # No feature flags so do hello world for now
+            return invoke_hello_world(json_message)
+
         current_span.add_event("to next queue")  # pragma: no cover, tracing is not being tested # noqa: E501
         app.send_task("etd-alma-drs-holding-service.tasks.add_holdings",
                       args=[new_message], kwargs={},
