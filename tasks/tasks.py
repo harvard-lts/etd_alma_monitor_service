@@ -98,14 +98,6 @@ def monitor_alma_and_invoke_dims(json_message):
     # 3. If records are in Alma, call etd/alma_monitor.update_alma_status
     # 4. Invoke DIMS (call etd/alma_monitor.invoke_dims)
 
-    # ctx = None
-    # if "traceparent" in json_message:  # pragma: no cover, tracing is not being tested # noqa: E501
-    #    carrier = {"traceparent": json_message["traceparent"]}
-    #    ctx = TraceContextTextMapPropagator().extract(carrier)
-    # with tracer.start_as_current_span("ALMA MONITOR SERVICE - send_to_drs",
-    #                                  context=ctx) \
-    #        as current_span:
-
     with tracer.start_as_current_span("Initialized ALMA Monitor / DRS") \
             as current_span:
         new_message = json_message
@@ -171,10 +163,6 @@ def monitor_alma_and_invoke_dims(json_message):
                       args=[new_message], kwargs={},
                       queue=os.getenv('PUBLISH_QUEUE_NAME'))  # pragma: no cover, does not reach this for unit testing # noqa: E501
 
-        # else:
-        #    # No feature flags so do hello world for now
-        #    return invoke_hello_world(json_message)
-
 
 # To be removed when real logic takes its place
 @tracer.start_as_current_span("invoke_hello_world_alma_monitor")
@@ -202,7 +190,6 @@ def invoke_hello_world(json_message):
     if "unit_test" in json_message:
         return new_message
     carrier = {}  # pragma: no cover, tracing is not being tested # noqa: E501
-    # TraceContextTextMapPropagator().inject(carrier)  # pragma: no cover, tracing is not being tested # noqa: E501
     traceparent = carrier["traceparent"]  # pragma: no cover, tracing is not being tested # noqa: E501
     new_message["traceparent"] = traceparent  # pragma: no cover, tracing is not being tested # noqa: E501
     current_span.add_event("to next queue")  # pragma: no cover, tracing is not being tested # noqa: E501
