@@ -84,7 +84,8 @@ class AlmaMonitor():
         return submitted_records
 
     @tracer.start_as_current_span(
-            "invoke_alma_monitor_poll_for_alma_submissions")
+            "ALMA MONITOR SERVICE: \
+            invoke_alma_monitor_poll_for_alma_submissions")
     def poll_for_alma_submissions(self):
         """
         Polls MongoDB for records with alma_submission_status set to

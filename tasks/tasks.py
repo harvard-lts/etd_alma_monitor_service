@@ -106,7 +106,8 @@ def monitor_alma_and_invoke_dims(json_message):
     #                                  context=ctx) \
     #        as current_span:
 
-    with tracer.start_as_current_span("ALMA MONITOR SERVICE - send_to_drs") \
+    with tracer.start_as_current_span("initialized ALMA Monitor, \
+                                      DRS Holdings Pipeline") \
             as current_span:
         new_message = json_message
         carrier = {}
