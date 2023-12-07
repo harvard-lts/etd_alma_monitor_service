@@ -14,7 +14,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.resources import SERVICE_NAME
 from opentelemetry.trace.propagation.tracecontext \
-    import TraceContextTextMapPropagator
+   import TraceContextTextMapPropagator
 import json
 from etd.alma_monitor import AlmaMonitor
 from etd.mongo_util import MongoUtil
@@ -98,13 +98,13 @@ def monitor_alma_and_invoke_dims(json_message):
     # 3. If records are in Alma, call etd/alma_monitor.update_alma_status
     # 4. Invoke DIMS (call etd/alma_monitor.invoke_dims)
 
-    ctx = None
-    if "traceparent" in json_message:  # pragma: no cover, tracing is not being tested # noqa: E501
-        carrier = {"traceparent": json_message["traceparent"]}
-        ctx = TraceContextTextMapPropagator().extract(carrier)
-    with tracer.start_as_current_span("send_to_drs", context=ctx) \
+    with tracer.start_as_current_span("Initialized ALMA Monitor / DRS") \
             as current_span:
-
+        new_message = json_message
+        carrier = {}
+        TraceContextTextMapPropagator().inject(carrier)
+        traceparent = carrier["traceparent"]
+        new_message["traceparent"] = traceparent
         if FEATURE_FLAGS in json_message:
             feature_flags = json_message[FEATURE_FLAGS]
             if SEND_TO_DRS_FEATURE_FLAG in feature_flags and \
@@ -157,9 +157,15 @@ def monitor_alma_and_invoke_dims(json_message):
             else:
                 # Feature is off so do hello world
                 return invoke_hello_world(json_message)
+
         else:
             # No feature flags so do hello world for now
             return invoke_hello_world(json_message)
+
+        current_span.add_event("to next queue")  # pragma: no cover, tracing is not being tested # noqa: E501
+        app.send_task("etd-alma-drs-holding-service.tasks.add_holdings",
+                      args=[new_message], kwargs={},
+                      queue=os.getenv('PUBLISH_QUEUE_NAME'))  # pragma: no cover, does not reach this for unit testing # noqa: E501
 
 
 # To be removed when real logic takes its place
@@ -188,7 +194,6 @@ def invoke_hello_world(json_message):
     if "unit_test" in json_message:
         return new_message
     carrier = {}  # pragma: no cover, tracing is not being tested # noqa: E501
-    TraceContextTextMapPropagator().inject(carrier)  # pragma: no cover, tracing is not being tested # noqa: E501
     traceparent = carrier["traceparent"]  # pragma: no cover, tracing is not being tested # noqa: E501
     new_message["traceparent"] = traceparent  # pragma: no cover, tracing is not being tested # noqa: E501
     current_span.add_event("to next queue")  # pragma: no cover, tracing is not being tested # noqa: E501
