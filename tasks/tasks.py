@@ -129,8 +129,12 @@ def monitor_alma_and_invoke_dims(json_message):
                         alma_id = alma_monitor.get_alma_id(
                             record[FIELD_PQ_ID])
                     if alma_id is not None:
+                        logger.debug("{} found in Alma".format(
+                            record[FIELD_PQ_ID]))
                         current_span.add_event("{} found in Alma".format(
                             record[FIELD_PQ_ID]))
+                        current_span.set_attribute("identifier",
+                                                   record[FIELD_PQ_ID])
                         if FIELD_DIRECTORY_ID not in record:
                             logger.error("Directory ID not found in record {}".format(record[FIELD_PQ_ID])) # noqa
                             current_span.add_event("NO DIR ID FOUND for {}".format(record[FIELD_PQ_ID])) # noqa
