@@ -18,7 +18,7 @@ class MongoUtil():   # pragma: no cover, not used by unit tests
     def __init__(self):
         self.client = pymongo.MongoClient(os.getenv("MONGO_URL"))
         self.db = self.client[os.getenv("MONGO_DB")]
-        self.collection = self.db[os.getenv("MONGO_TEST_COLLECTION")]
+        self.collection = self.db[os.getenv("MONGO_COLLECTION")]
 
     def insert_record(self, record):  # pragma: no cover, not currently used
         self.collection.insert_one(record)
