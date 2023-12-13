@@ -122,6 +122,10 @@ def monitor_alma_and_invoke_dims(json_message):
                 logger.debug(submitted_records)
                 for record in submitted_records:
                     logger.debug("Record: {}".format(record))
+                    logger.debug("record[FIELD_PQ_ID] - before almaid test")
+                    logger.debug(record[FIELD_PQ_ID])
+                    current_span.add_event("{} found in Alma - before almaid test".format(
+                        record[FIELD_PQ_ID]))
                     if "integration_test" in json_message:
                         alma_id = os.getenv("INTEGRATION_TEST_ALMA_ID")
                         record["integration_test"] = True
@@ -129,6 +133,8 @@ def monitor_alma_and_invoke_dims(json_message):
                         alma_id = alma_monitor.get_alma_id(
                             record[FIELD_PQ_ID])
                     if alma_id is not None:
+                        logger.debug("record[FIELD_PQ_ID]")
+                        logger.debug(record[FIELD_PQ_ID])
                         current_span.add_event("{} found in Alma".format(
                             record[FIELD_PQ_ID]))
                         if FIELD_DIRECTORY_ID not in record:
