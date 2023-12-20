@@ -11,6 +11,7 @@ import etd.schools as schools
 import shutil
 import re
 from datetime import datetime
+from datetime import timedelta
 from opentelemetry import trace
 from opentelemetry.trace import Status
 from opentelemetry.trace import StatusCode
@@ -20,6 +21,8 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.resources import SERVICE_NAME
+import traceback
+import jwt
 
 # tracing setup
 JAEGER_NAME = os.getenv('JAEGER_NAME')
@@ -112,7 +115,7 @@ class AlmaMonitor():
 
         try:
             matching_records = self.mongoutil.query_records(query, fields)
-            self.logger.info("Found {len(matching_records)} \
+            self.logger.info(f"Found {len(matching_records)} \
                              matching records")
             self.logger.debug(f"Matching records: {matching_records}")
         except Exception as e:
@@ -122,7 +125,8 @@ class AlmaMonitor():
             current_span.record_exception(e)
             raise e
         record_list = list(matching_records)
-        self.logger.debug(f"Record list: {record_list}")
+        self.logger.debug("Record list:")
+        self.logger.debug(record_list)
         return record_list
 
     def get_alma_id(self, proquest_id): # pragma: no cover, covered in integration testing # noqa
@@ -206,8 +210,36 @@ class AlmaMonitor():
         # Call DIMS ingest
         ingest_etd_export = None
 
+        jwt_private_key_path = os.getenv('DIMS_PRIVATE_KEY')
+        try:
+            with open(jwt_private_key_path) as jwt_private_key_file:
+                jwt_private_key = jwt_private_key_file.read()
+        except Exception as e:
+            exception_msg = traceback.format_exc()
+            msg = "Error opening private jwt token.\n" + exception_msg
+            self.logger.error(msg)
+            self.logger.error("Expected path: " + jwt_private_key_path)
+
+        jwt_expiration = int(os.getenv('JWT_EXPIRATION'), 1800)
+        # calculate iat and exp values
+        current_datetime = datetime.now()
+        current_epoch = int(current_datetime.timestamp())
+        expiration = current_datetime + timedelta(seconds=jwt_expiration)
+        
+
+        # generate JWT token
+        jwt_token = jwt.encode(
+            payload={'iss': 'ePADD', 'iat': current_epoch, 'exp': int(expiration.timestamp())},
+            key=jwt_private_key,
+            algorithm='RS256',
+            headers={"alg": "RS256", "typ": "JWT", "kid": "defaultEpadd"}
+        )
+
+        headers = {"Authorization": "Bearer " + jwt_token}
+
         ingest_etd_export = requests.post(
             dims_endpoint,
+            headers=headers,
             json=payload_data,
             verify=False)
 
