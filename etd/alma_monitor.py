@@ -214,7 +214,7 @@ class AlmaMonitor():
         try:
             with open(jwt_private_key_path) as jwt_private_key_file:
                 jwt_private_key = jwt_private_key_file.read()
-        except Exception as e:
+        except Exception:
             exception_msg = traceback.format_exc()
             msg = "Error opening private jwt token.\n" + exception_msg
             self.logger.error(msg)
@@ -225,11 +225,11 @@ class AlmaMonitor():
         current_datetime = datetime.now()
         current_epoch = int(current_datetime.timestamp())
         expiration = current_datetime + timedelta(seconds=jwt_expiration)
-        
 
         # generate JWT token
         jwt_token = jwt.encode(
-            payload={'iss': 'ePADD', 'iat': current_epoch, 'exp': int(expiration.timestamp())},
+            payload={'iss': 'ePADD', 'iat': current_epoch,
+                     'exp': int(expiration.timestamp())},
             key=jwt_private_key,
             algorithm='RS256',
             headers={"alg": "RS256", "typ": "JWT", "kid": "defaultEpadd"}
