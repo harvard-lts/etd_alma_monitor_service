@@ -237,6 +237,8 @@ class AlmaMonitor():
 
         headers = {"Authorization": "Bearer " + jwt_token}
 
+        self.logger.debug("DIMS headers: {}".format(headers))
+        self.logger.debug("DIMS payload: {}".format(payload_data))
         ingest_etd_export = requests.post(
             dims_endpoint,
             headers=headers,
@@ -245,7 +247,7 @@ class AlmaMonitor():
 
         json_ingest_response = ingest_etd_export.json()
         if json_ingest_response["status"] == "failure":
-            raise Exception("DIMS Ingest call failed")
+            raise Exception("DIMS Ingest call failed: {}".format(json_ingest_response)) # noqa
 
     def __unzip_submission(self, submission_dir): # pragma: no cover, covered in integration testing # noqa
         for file in os.listdir(submission_dir):
