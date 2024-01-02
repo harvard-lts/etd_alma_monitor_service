@@ -214,22 +214,22 @@ class AlmaMonitor():
         try:
             with open(jwt_private_key_path) as jwt_private_key_file:
                 jwt_private_key = jwt_private_key_file.read()
-        except Exception:
+        except Exception as e:
             exception_msg = traceback.format_exc()
             msg = "Error opening private jwt token.\n" + exception_msg
             self.logger.error(msg)
             self.logger.error("Expected path: " + jwt_private_key_path)
 
-        jwt_expiration = int(os.getenv('JWT_EXPIRATION'), 1800)
+        jwt_expiration = int(os.getenv('JWT_EXPIRATION', 1800))
         # calculate iat and exp values
         current_datetime = datetime.now()
         current_epoch = int(current_datetime.timestamp())
         expiration = current_datetime + timedelta(seconds=jwt_expiration)
+        
 
         # generate JWT token
         jwt_token = jwt.encode(
-            payload={'iss': 'ePADD', 'iat': current_epoch,
-                     'exp': int(expiration.timestamp())},
+            payload={'iss': 'ePADD', 'iat': current_epoch, 'exp': int(expiration.timestamp())},
             key=jwt_private_key,
             algorithm='RS256',
             headers={"alg": "RS256", "typ": "JWT", "kid": "defaultEpadd"}
@@ -237,8 +237,6 @@ class AlmaMonitor():
 
         headers = {"Authorization": "Bearer " + jwt_token}
 
-        self.logger.debug("DIMS headers: {}".format(headers))
-        self.logger.debug("DIMS payload: {}".format(payload_data))
         ingest_etd_export = requests.post(
             dims_endpoint,
             headers=headers,
@@ -247,7 +245,7 @@ class AlmaMonitor():
 
         json_ingest_response = ingest_etd_export.json()
         if json_ingest_response["status"] == "failure":
-            raise Exception("DIMS Ingest call failed: {}".format(json_ingest_response)) # noqa
+            raise Exception("DIMS Ingest call failed")
 
     def __unzip_submission(self, submission_dir): # pragma: no cover, covered in integration testing # noqa
         for file in os.listdir(submission_dir):
