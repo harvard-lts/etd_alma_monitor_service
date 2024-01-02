@@ -225,7 +225,7 @@ class AlmaMonitor():
         current_datetime = datetime.now()
         current_epoch = int(current_datetime.timestamp())
         expiration = current_datetime + timedelta(seconds=jwt_expiration)
-        
+        self.logger.debug("expiration: {}".format(expiration))
 
         # generate JWT token
         jwt_token = jwt.encode(
