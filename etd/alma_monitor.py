@@ -229,10 +229,10 @@ class AlmaMonitor():
 
         # generate JWT token
         jwt_token = jwt.encode(
-            payload={'iss': 'ePADD', 'iat': current_epoch, 'exp': int(expiration.timestamp())},
+            payload={'iss': 'ETD', 'iat': current_epoch, 'exp': int(expiration.timestamp())},
             key=jwt_private_key,
             algorithm='RS256',
-            headers={"alg": "RS256", "typ": "JWT", "kid": "defaultEpadd"}
+            headers={"alg": "RS256", "typ": "JWT", "kid": "defaultEtd"}
         )
 
         headers = {"Authorization": "Bearer " + jwt_token}
