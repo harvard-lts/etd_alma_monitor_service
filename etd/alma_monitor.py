@@ -23,6 +23,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.resources import SERVICE_NAME
 import traceback
 import jwt
+import jcs
 import hashlib
 
 # tracing setup
@@ -229,7 +230,8 @@ class AlmaMonitor():
         self.logger.debug("expiration: {}".format(expiration))
 
         # generate JWT token
-        body_hash = hashlib.sha256(payload_data.encode()).hexdigest()
+        request_body = jcs.canonicalize(payload_data).decode("utf-8")
+        body_hash = hashlib.sha256(request_body.encode()).hexdigest()
         jwt_token = jwt.encode(
             payload={'iss': 'ETD', 'iat': current_epoch,
                      'bodySHA256Hash': body_hash,

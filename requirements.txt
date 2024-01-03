@@ -3,6 +3,7 @@ certifi==2023.7.22
 coverage==7.2.6
 cryptography==41.0.4
 iniconfig==2.0.0
+jcs==0.2.0
 opentelemetry-api==1.19.0
 opentelemetry-sdk==1.19.0
 opentelemetry-exporter-jaeger==1.19.0
