@@ -224,7 +224,7 @@ class AlmaMonitor():
         jwt_expiration = int(os.getenv('JWT_EXPIRATION', 1800))
         # calculate iat and exp values
         current_datetime = datetime.now()
-        current_epoch = int(current_datetime.timestamp()) - 120
+        current_epoch = int(current_datetime.timestamp())
         expiration = current_datetime + timedelta(seconds=jwt_expiration)
         self.logger.debug("expiration: {}".format(expiration))
 
