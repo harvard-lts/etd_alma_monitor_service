@@ -98,7 +98,7 @@ def monitor_alma_and_invoke_dims(json_message):
     # 3. If records are in Alma, call etd/alma_monitor.update_alma_status
     # 4. Invoke DIMS (call etd/alma_monitor.invoke_dims)
 
-    with tracer.start_as_current_span("Initialized ALMA Monitor / DRS") \
+    with tracer.start_as_current_span("Initialized ALMA Monitor") \
             as current_span:
         new_message = json_message
         carrier = {}
@@ -165,11 +165,6 @@ def monitor_alma_and_invoke_dims(json_message):
         else:
             # No feature flags so do hello world for now
             return invoke_hello_world(json_message)
-
-        current_span.add_event("to next queue")  # pragma: no cover, tracing is not being tested # noqa: E501
-        app.send_task("etd-alma-drs-holding-service.tasks.add_holdings",
-                      args=[new_message], kwargs={},
-                      queue=os.getenv('PUBLISH_QUEUE_NAME'))  # pragma: no cover, does not reach this for unit testing # noqa: E501
 
 
 # To be removed when real logic takes its place
