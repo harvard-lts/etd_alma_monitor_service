@@ -98,7 +98,7 @@ def monitor_alma_and_invoke_dims(json_message):
     # 3. If records are in Alma, call etd/alma_monitor.update_alma_status
     # 4. Invoke DIMS (call etd/alma_monitor.invoke_dims)
 
-    with tracer.start_as_current_span("Initialized ALMA Monitor / DRS") \
+    with tracer.start_as_current_span("Initialized ALMA Monitor") \
             as current_span:
         new_message = json_message
         carrier = {}
