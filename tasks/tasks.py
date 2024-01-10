@@ -166,11 +166,6 @@ def monitor_alma_and_invoke_dims(json_message):
             # No feature flags so do hello world for now
             return invoke_hello_world(json_message)
 
-        current_span.add_event("to next queue")  # pragma: no cover, tracing is not being tested # noqa: E501
-        app.send_task("etd-alma-drs-holding-service.tasks.add_holdings",
-                      args=[new_message], kwargs={},
-                      queue=os.getenv('PUBLISH_QUEUE_NAME'))  # pragma: no cover, does not reach this for unit testing # noqa: E501
-
 
 # To be removed when real logic takes its place
 @tracer.start_as_current_span("invoke_hello_world_alma_monitor")
