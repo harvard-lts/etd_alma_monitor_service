@@ -45,6 +45,8 @@ ROLE_SUPPLEMENT = "THESIS_SUPPLEMENT"
 ROLE_LICENSE = "LICENSE"
 ROLE_DOCUMENTATION = "DOCUMENTATION"
 ROLE_ARCHIVAL_MASTER = "ARCHIVAL_MASTER"
+SUPPLEMENT = "SUPPLEMENT"
+
 
 namespaces = {'xb': 'http://www.loc.gov/zing/srw/'}
 
@@ -275,7 +277,7 @@ class AlmaMonitor():
             raise Exception("amdid is missing from mets for {}"
                             .format(filename), None)
 
-        role = self.__determine_role(amdid, filename)
+        role = self.__determine_role_for_osn(amdid, filename)
 
         osn = "ETD_{}_{}_{}_PQ_{}".format(role, school_dropbox_name,
                                           degree_date, pq_id)
@@ -288,7 +290,7 @@ class AlmaMonitor():
             osn = osn + "_" + osn_unique_appender # pragma: no cover, covered in integration testing # noqa
         return osn
 
-    def __determine_role(self, amdid, filename):
+    def __determine_role_for_osn(self, amdid, filename):
         # mets.xml is the only one not in the mets.xml fileSec
         # so it will not have the amdid
         if amdid is None and os.path.basename(filename) == "mets.xml":
@@ -297,7 +299,7 @@ class AlmaMonitor():
         if amdid.startswith(AMD_PRIMARY):
             return ROLE_THESIS
         elif amdid.startswith(AMD_SUP):
-            return ROLE_SUPPLEMENT
+            return SUPPLEMENT
         elif amdid.startswith(AMD_LIC):
             return ROLE_LICENSE
         return None
@@ -397,7 +399,7 @@ class AlmaMonitor():
         # so it will not have the amdid
         if ROLE_DOCUMENTATION in osn:
             return ROLE_DOCUMENTATION
-        elif ROLE_SUPPLEMENT in osn:
+        elif SUPPLEMENT in osn:
             return ROLE_SUPPLEMENT
         elif ROLE_LICENSE in osn:
             return ROLE_LICENSE
