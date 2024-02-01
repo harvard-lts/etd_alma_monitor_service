@@ -45,7 +45,8 @@ class TestMongoIntegrationClass():
         # setup the test collection with 3 records
         self.__setup_test_collection()
         # call the poller
-        alma_monitor = AlmaMonitor()
+        alma_monitor = AlmaMonitor(os.getenv(
+            "MONGO_TEST_COLLECTION"))
         records = alma_monitor.poll_for_alma_submissions()
 
         assert len(records) == 2

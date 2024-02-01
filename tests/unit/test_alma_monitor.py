@@ -277,7 +277,7 @@ class TestAlmaMonitor(unittest.TestCase):
         supp_osn = alma_monitor.format_etd_osn("gsd", "supp.pdf",
                                                "12345",
                                                "amd_supplemental", "2023")
-        assert supp_osn == "ETD_THESIS_SUPPLEMENT_gsd_2023_PQ_12345"
+        assert supp_osn == "ETD_SUPPLEMENT_gsd_2023_PQ_12345"
         lic_osn = alma_monitor.format_etd_osn("gsd", "license.pdf",
                                               "12345", "amd_license", "2023")
         assert lic_osn == "ETD_LICENSE_gsd_2023_PQ_12345"
