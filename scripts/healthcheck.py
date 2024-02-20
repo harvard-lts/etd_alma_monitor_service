@@ -10,20 +10,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 hbeat_path = os.getenv("HEARTBEAT_FILE", "/tmp/worker_heartbeat")
 HEARTBEAT_FILE = Path(hbeat_path)
 HEARTBEAT_WINDOW = int(os.getenv("HEARTBEAT_WINDOW", 60))
-ALMA_API_KEY = os.getenv("ALMA_API_KEY")
-ALMA_HEALTHCHECK_URL = os.getenv("ALMA_HEALTHCHECK_URL") + ALMA_API_KEY
 DIMS_HEALTHCHECK_URL = os.getenv("DIMS_HEALTHCHECK_URL")
 
-# check alma
-try:
-    # need verify false b/c using selfsigned certs
-    r = requests.get(ALMA_HEALTHCHECK_URL, verify=False)
-    if (r.status_code != 200):
-        print("alma healthcheck failed")
-        sys.exit(1)
-except Exception:
-    print("alma healthcheck failed")
-    sys.exit(1)
 
 # check dims
 try:
