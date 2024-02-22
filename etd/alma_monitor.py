@@ -259,7 +259,8 @@ class AlmaMonitor():
         for file in os.listdir(submission_dir):
             file_path = os.path.join(submission_dir, file)
             self.logger.debug("submission dir file: {}".format(file))
-            if os.path.isfile(file_path) and file.endswith(".zip"):
+            if os.path.isfile(file_path) \
+               and re.match(r"submission_[0-9]+\.zip", file):
                 extracted_dir = os.path.join(submission_dir, "extracted")
                 os.makedirs(extracted_dir, exist_ok=True)
                 self.logger.debug("extracted dir: {}".format(extracted_dir))
