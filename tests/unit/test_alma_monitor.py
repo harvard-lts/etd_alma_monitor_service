@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch
 from unittest.mock import MagicMock
 from etd.alma_monitor import AlmaMonitor
+import etd.mongo_util as mongo_util
 import pytest
 
 
@@ -288,3 +289,14 @@ class TestAlmaMonitor(unittest.TestCase):
                                                         "12345",
                                                         "amd_invalid", "2023")
         assert incorrect_amd_osn == "ETD_gsd_2023_PQ_12345"
+
+    def test_invoke_dims_special_chars(self):
+        mongo_record = {
+            "unit_testing": True,
+            mongo_util.FIELD_DIRECTORY_ID: "submission_special_chars",
+            mongo_util.FIELD_SCHOOL_ALMA_DROPBOX: "hms",
+            mongo_util.FIELD_PQ_ID: "29168916"
+        }
+        alma_monitor = AlmaMonitor()
+        retval = alma_monitor.invoke_dims(mongo_record, "12345678")
+        assert isinstance(retval, dict)
