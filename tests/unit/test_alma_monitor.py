@@ -297,6 +297,6 @@ class TestAlmaMonitor(unittest.TestCase):
             mongo_util.FIELD_SCHOOL_ALMA_DROPBOX: "hms",
             mongo_util.FIELD_PQ_ID: "29168916"
         }
-        alma_monitor = AlmaMonitor()
+        alma_monitor = AlmaMonitor(None, True)
         retval = alma_monitor.invoke_dims(mongo_record, "12345678")
         assert isinstance(retval, dict)
