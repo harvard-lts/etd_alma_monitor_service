@@ -53,9 +53,10 @@ namespaces = {'xb': 'http://www.loc.gov/zing/srw/'}
 
 class AlmaMonitor():
 
-    def __init__(self, test_collection=None):
+    def __init__(self, test_collection=None, unittesting=False):
         configure_logger()
-        self.mongoutil = MongoUtil()
+        if not unittesting:
+            self.mongoutil = MongoUtil()
         if test_collection is not None:  # pragma: no cover, only changes collection # noqa
             self.mongoutil.set_collection(self.mongoutil.db[test_collection])
 
