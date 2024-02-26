@@ -53,9 +53,10 @@ namespaces = {'xb': 'http://www.loc.gov/zing/srw/'}
 
 class AlmaMonitor():
 
-    def __init__(self, test_collection=None):
+    def __init__(self, test_collection=None, unittesting=False):
         configure_logger()
-        self.mongoutil = MongoUtil()
+        if not unittesting:
+            self.mongoutil = MongoUtil()
         if test_collection is not None:  # pragma: no cover, only changes collection # noqa
             self.mongoutil.set_collection(self.mongoutil.db[test_collection])
 
@@ -163,7 +164,7 @@ class AlmaMonitor():
             "invoke_alma_monitor_invoke_dims")
     def invoke_dims(self, record, alma_id): # pragma: no cover, covered in integration testing # noqa
         # Verify the submission exists in the directory
-        data_dir = os.getenv("ALMA_DATA_DIR")
+        data_dir = os.getenv("ALMA_DATA_DIR", "./tests/data/")
         submission_dir = os.path.join(data_dir,
                                       record[mongo_util.FIELD_DIRECTORY_ID])
         if not os.path.isdir(submission_dir):

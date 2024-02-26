@@ -45,6 +45,18 @@ class MetsExtractor:
                     fileSecInfo = FileSecInfo(amdid, mimetype)
                     self.fileSec[filename] = fileSecInfo
                     return fileSecInfo
+            elif href:
+                # Try to get rid of special characters and see if they match
+                href = href.encode('ascii', "ignore").decode('ascii')
+                basefilename = os.path.basename(filename) \
+                    .encode('ascii', "ignore").decode('ascii')
+                if href == basefilename:
+                    amdid = file.get("ADMID")
+                    mimetype = file.get("MIMETYPE")
+                    if amdid and mimetype:
+                        fileSecInfo = FileSecInfo(amdid, mimetype)
+                        self.fileSec[filename] = fileSecInfo
+                        return fileSecInfo
         return FileSecInfo()
 
     def get_degree_date(self):
