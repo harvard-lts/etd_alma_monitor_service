@@ -366,6 +366,9 @@ class AlmaMonitor():
         file_info_json = {}
         for file in os.listdir(extractd_dir):
             modified_file_name = re.sub(r"[^\w\d\.\-]", "_", file)
+            # Remove special characters
+            modified_file_name = modified_file_name \
+                .encode('ascii', "ignore").decode('ascii')
             file_path = os.path.join(extractd_dir, file)
             self.logger.debug("file path: {}".format(file_path))
             int_test = False
