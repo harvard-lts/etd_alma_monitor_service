@@ -300,7 +300,7 @@ class TestAlmaMonitor(unittest.TestCase):
         alma_monitor = AlmaMonitor(None, True)
         retval = alma_monitor.invoke_dims(mongo_record, "12345678")
         assert isinstance(retval, dict)
-    
+
     def test_find_dash_id_from_mapfile(self):
         alma_monitor = AlmaMonitor(None, True)
         directory_id = "proquest20240227_test"
