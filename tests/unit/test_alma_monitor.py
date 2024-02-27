@@ -300,3 +300,19 @@ class TestAlmaMonitor(unittest.TestCase):
         alma_monitor = AlmaMonitor(None, True)
         retval = alma_monitor.invoke_dims(mongo_record, "12345678")
         assert isinstance(retval, dict)
+
+    def test_find_dash_id_from_mapfile(self):
+        alma_monitor = AlmaMonitor(None, True)
+        directory_id = "proquest20240227_test"
+        dash_id = alma_monitor.find_dash_id_from_mapfile(directory_id)
+        assert dash_id == "37158770"
+
+        empty_directory_id = "proquest20240227_testemptymapfile"
+        empty_dash_id = alma_monitor.find_dash_id_from_mapfile(
+            empty_directory_id)
+        assert empty_dash_id is None
+
+        nomapfile_directory_id = "proquest20240227_testnomapfile"
+        nomapfile_dash_id = alma_monitor.find_dash_id_from_mapfile(
+            nomapfile_directory_id)
+        assert nomapfile_dash_id is None

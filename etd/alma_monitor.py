@@ -164,7 +164,7 @@ class AlmaMonitor():
             "invoke_alma_monitor_invoke_dims")
     def invoke_dims(self, record, alma_id): # pragma: no cover, covered in integration testing # noqa
         # Verify the submission exists in the directory
-        data_dir = os.getenv("ALMA_DATA_DIR", "./tests/data/")
+        data_dir = os.getenv("ALMA_DATA_DIR", "./tests/data/in")
         submission_dir = os.path.join(data_dir,
                                       record[mongo_util.FIELD_DIRECTORY_ID])
         if not os.path.isdir(submission_dir):
@@ -189,7 +189,7 @@ class AlmaMonitor():
 
         # Build the json DIMS data
         dims_json = self.__build_base_json_dims_data(
-            mets_extractor, alma_id, record, data_dir)
+            alma_id, record, data_dir)
         file_info_json = self.__build_file_info_json_data(
             extractd_dir, record, mets_extractor)
         dims_json["admin_metadata"]["file_info"] = file_info_json
@@ -306,7 +306,7 @@ class AlmaMonitor():
             return ROLE_LICENSE
         return None
 
-    def __build_base_json_dims_data(self, mets_extractor, alma_id,
+    def __build_base_json_dims_data(self, alma_id,
                                     record, data_dir): # pragma: no cover, covered in integration testing # noqa
         if "integration_test" in record:
             owner_code = "HUL.TEST"
@@ -348,7 +348,8 @@ class AlmaMonitor():
                 "ownerCode": owner_code,
                 "billingCode": billing_code,
                 "urnAuthorityPath": urn_authority_path,
-                "dash_id": mets_extractor.get_dash_id(),
+                "dash_id": self.find_dash_id_from_mapfile(
+                    record[mongo_util.FIELD_DIRECTORY_ID]),
                 "pq_id": "PQ-"+record[mongo_util.FIELD_PQ_ID],
                 "alma_id": alma_id,
                 # Required fields but no longer used
@@ -409,3 +410,27 @@ class AlmaMonitor():
         elif ROLE_THESIS in osn:
             return ROLE_THESIS
         return None
+
+    def find_dash_id_from_mapfile(self, directory_id):
+        """
+        Finds the Dash ID from the map file associated with the given
+          directory ID.
+
+        Args:
+            directory_id (str): The ID of the directory.
+
+        Returns:
+            str: The Dash ID found in the map file, or None if not found.
+        """
+        data_out_dir = os.getenv("ALMA_DATA_OUT_DIR", "./tests/data/out")
+        map_file = os.path.join(data_out_dir, directory_id, "mapfile")
+        if not os.path.isfile(map_file):
+            return None
+        dash_id = None
+        # Try to get Dash ID from map file
+        with open(map_file) as mapFileIn:
+            mapFile_contents = mapFileIn.read()
+            match = re.match(r'submission_\d+ \d+/(\d+)', mapFile_contents)
+        if match:
+            dash_id = match.group(1)
+        return dash_id
