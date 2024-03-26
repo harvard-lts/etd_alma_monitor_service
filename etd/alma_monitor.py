@@ -67,8 +67,9 @@ class AlmaMonitor():
     def monitor_alma_and_invoke_dims(self): # pragma: no cover, covered in integration testing # noqa
         record_list = self.poll_for_alma_submissions()
         submitted_records = []
+        current_span = trace.get_current_span()
+        current_span.add_event("Beginning to process record list for Alma")
         for record in record_list:
-            current_span = trace.get_current_span()
             current_span.add_event("checking Alma for pqid {}"
                                    .format(record[mongo_util.FIELD_PQ_ID]))
             try:
