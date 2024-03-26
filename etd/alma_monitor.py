@@ -129,10 +129,10 @@ class AlmaMonitor():
             current_span.add_event("Unable to query mongo for records")
             current_span.record_exception(e)
             raise e
-        record_list = list(matching_records)
+        # record_list = list(matching_records)
         self.logger.debug("Record list:")
-        self.logger.debug(record_list)
-        return record_list
+        self.logger.debug(matching_records)
+        return matching_records
 
     def get_alma_id(self, proquest_id): # pragma: no cover, covered in integration testing # noqa
         alma_sru_base = os.getenv("ALMA_SRU_BASE") + proquest_id
